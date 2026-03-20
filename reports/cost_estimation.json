@@ -1,0 +1,342 @@
+{
+  "metadata": {
+    "title": "Estimación de Costos — Modernización payments-core a AWS",
+    "system": "payments-core / BankDemo",
+    "version": "1.0",
+    "generated_at": "2026-03-20",
+    "region": "us-east-2",
+    "currency": "USD",
+    "classification": "Confidential — Executive Use Only",
+    "prepared_by": "Bank Modernization Readiness Advisor — Kiro + AWS",
+    "notes": "Estimaciones basadas en AWS Pricing Calculator (us-east-2, Marzo 2026). Sujetas a variación según uso real y negociación de Enterprise Discount Program (EDP)."
+  },
+
+  "modernization_investment": {
+    "description": "Costo único de implementación del programa de modernización (24 semanas)",
+    "currency": "USD",
+    "items": [
+      {
+        "phase": "Pre-proyecto",
+        "item": "Arquitectura y diseño de solución",
+        "weeks": 4,
+        "resources": "1 Cloud Architect senior",
+        "cost": 48000,
+        "notes": "Incluye diseño de arquitectura objetivo, plan de migración y documentación técnica"
+      },
+      {
+        "phase": "Fase 1",
+        "item": "Fundamentos de Seguridad (semanas 1–6)",
+        "weeks": 6,
+        "resources": "1 Cloud Architect + 1 Security Engineer (50%)",
+        "cost": 35000,
+        "notes": "CloudTrail, KMS, Secrets Manager, Security Hub, AWS Config, remediación DQ"
+      },
+      {
+        "phase": "Fase 2",
+        "item": "Gobernanza y Control (semanas 7–12)",
+        "weeks": 6,
+        "resources": "1 Cloud Architect + 1 Compliance Analyst (50%)",
+        "cost": 42000,
+        "notes": "Control Tower, Audit Manager, Macie, Lake Formation, Glue Catalog"
+      },
+      {
+        "phase": "Fase 3",
+        "item": "Migración de Datos y Aplicación (semanas 13–18)",
+        "weeks": 6,
+        "resources": "1 Cloud Architect + 1 DevOps + 1 Data Engineer (75%)",
+        "cost": 68000,
+        "notes": "Aurora, DMS, EKS, Cognito, IAM, validación regulatoria"
+      },
+      {
+        "phase": "Fase 4",
+        "item": "Operaciones y Optimización (semanas 19–24)",
+        "weeks": 6,
+        "resources": "1 DevOps + 1 Data Engineer (50%)",
+        "cost": 28000,
+        "notes": "QuickSight, automatización, GuardDuty, documentación SOX"
+      },
+      {
+        "phase": "Certificación",
+        "item": "Auditoría PCI-DSS (QSA externo)",
+        "weeks": 2,
+        "resources": "QSA calificado externo",
+        "cost": 25000,
+        "notes": "Evaluación formal PCI-DSS v4.0 por Qualified Security Assessor"
+      },
+      {
+        "phase": "Capacitación",
+        "item": "Capacitación del equipo en AWS",
+        "weeks": 2,
+        "resources": "Equipo completo (6 personas)",
+        "cost": 12000,
+        "notes": "AWS Cloud Practitioner + Security Specialty para equipo de operaciones"
+      },
+      {
+        "phase": "Contingencia",
+        "item": "Reserva de contingencia (15%)",
+        "weeks": null,
+        "resources": null,
+        "cost": 38700,
+        "notes": "15% sobre subtotal de implementación — riesgos de migración y complejidad técnica"
+      }
+    ],
+    "subtotal_implementation": 258000,
+    "contingency": 38700,
+    "total": 296700
+  },
+
+  "aws_monthly_costs": {
+    "description": "Costo mensual estimado del entorno AWS en estado objetivo (post-modernización)",
+    "currency": "USD",
+    "environment": "Producción — us-east-2",
+    "services": [
+      {
+        "service": "Amazon Aurora PostgreSQL",
+        "configuration": "db.r6g.large Multi-AZ, 100 GB storage, 35 días backup",
+        "monthly_cost": 350,
+        "annual_cost": 4200,
+        "replaces": "SQL Server on-premises",
+        "regulatory_value": "Cifrado KMS, HA, IAM auth — PCI-DSS Req. 3, SOX"
+      },
+      {
+        "service": "Amazon EKS",
+        "configuration": "Cluster + 2 nodos t3.medium (payments-core, dq-engine, compliance-engine)",
+        "monthly_cost": 140,
+        "annual_cost": 1680,
+        "replaces": "Servidor on-premises",
+        "regulatory_value": "Aislamiento de workloads, escalabilidad"
+      },
+      {
+        "service": "AWS Glue",
+        "configuration": "10 DPU-hours/día, 3 crawlers, 2 jobs ETL",
+        "monthly_cost": 130,
+        "annual_cost": 1560,
+        "replaces": "Procesos ETL manuales",
+        "regulatory_value": "Linaje de datos — SOX, Basel III BCBS 239"
+      },
+      {
+        "service": "AWS Config",
+        "configuration": "50 reglas managed, evaluaciones continuas, historial 7 años",
+        "monthly_cost": 45,
+        "annual_cost": 540,
+        "replaces": "Revisiones manuales de configuración",
+        "regulatory_value": "Compliance continuo — PCI-DSS Req. 2, 10"
+      },
+      {
+        "service": "AWS Security Hub",
+        "configuration": "Multi-cuenta, estándares PCI-DSS + CIS + FSBP",
+        "monthly_cost": 30,
+        "annual_cost": 360,
+        "replaces": "Revisiones manuales de seguridad",
+        "regulatory_value": "Postura de seguridad centralizada — PCI-DSS Req. 11"
+      },
+      {
+        "service": "AWS Audit Manager",
+        "configuration": "Assessments PCI-DSS + SOX, evidencia 7 años",
+        "monthly_cost": 20,
+        "annual_cost": 240,
+        "replaces": "Proceso manual de auditoría",
+        "regulatory_value": "Evidencia automática — SOX Sec. 302/404, PCI-DSS"
+      },
+      {
+        "service": "AWS CloudTrail",
+        "configuration": "Trail multi-región, log file validation, Object Lock WORM",
+        "monthly_cost": 15,
+        "annual_cost": 180,
+        "replaces": "Sin audit trail (hallazgo crítico)",
+        "regulatory_value": "Audit trail inmutable — SOX Sec. 404, PCI-DSS Req. 10"
+      },
+      {
+        "service": "Amazon S3",
+        "configuration": "500 GB (raw + clean + errors + output + audit), versioning, lifecycle",
+        "monthly_cost": 25,
+        "annual_cost": 300,
+        "replaces": "Almacenamiento local sin cifrado",
+        "regulatory_value": "Retención regulatoria 7 años — SOX, PCI-DSS Req. 9"
+      },
+      {
+        "service": "Amazon Athena",
+        "configuration": "50 GB scanned/mes, workgroup audit con KMS",
+        "monthly_cost": 12,
+        "annual_cost": 144,
+        "replaces": "Consultas directas a SQL Server",
+        "regulatory_value": "Consultas de auditoría — SOX, PCI-DSS Req. 10.7"
+      },
+      {
+        "service": "AWS KMS",
+        "configuration": "4 CMKs (payments-data, audit-logs, secrets, glue-catalog), 100K requests/mes",
+        "monthly_cost": 8,
+        "annual_cost": 96,
+        "replaces": "Sin cifrado (hallazgo crítico)",
+        "regulatory_value": "Cifrado en reposo — PCI-DSS Req. 3, GDPR Art. 32"
+      },
+      {
+        "service": "Amazon Macie",
+        "configuration": "500 GB scanned, jobs diarios, findings a EventBridge",
+        "monthly_cost": 5,
+        "annual_cost": 60,
+        "replaces": "Sin clasificación de PII",
+        "regulatory_value": "PII discovery — GDPR Art. 30, PCI-DSS Req. 3.2"
+      },
+      {
+        "service": "AWS Secrets Manager",
+        "configuration": "5 secretos, rotación automática cada 30 días",
+        "monthly_cost": 3,
+        "annual_cost": 36,
+        "replaces": "Credenciales hardcodeadas en código",
+        "regulatory_value": "Gestión de credenciales — PCI-DSS Req. 8"
+      }
+    ],
+    "total_monthly": 783,
+    "total_annual": 9396,
+    "notes": "No incluye: AWS Control Tower (sin costo adicional), Amazon Cognito (tier gratuito para < 50K MAU), Amazon GuardDuty (estimado < $15/mes adicional), Amazon QuickSight (estimado $18/mes para 2 autores)."
+  },
+
+  "onpremises_current_costs": {
+    "description": "Costo operativo anual estimado del entorno on-premises actual",
+    "currency": "USD",
+    "items": [
+      {
+        "item": "Licencias SQL Server Enterprise",
+        "annual_cost": 85000,
+        "notes": "Licencia por core — servidor de producción + DR"
+      },
+      {
+        "item": "Hardware y mantenimiento de servidores",
+        "annual_cost": 48000,
+        "notes": "Depreciación, mantenimiento preventivo, reemplazo de componentes"
+      },
+      {
+        "item": "Soporte y administración de infraestructura",
+        "annual_cost": 72000,
+        "notes": "1.5 FTE dedicados a administración de servidores y base de datos"
+      },
+      {
+        "item": "Gestión manual de compliance y auditorías",
+        "annual_cost": 65000,
+        "notes": "Tiempo de equipo en preparación de evidencia, revisiones manuales, auditorías"
+      },
+      {
+        "item": "Costo promedio de incidentes de seguridad",
+        "annual_cost": 42000,
+        "notes": "Estimado basado en industria bancaria — respuesta a incidentes, remediación"
+      }
+    ],
+    "total_annual": 312000
+  },
+
+  "financial_analysis": {
+    "currency": "USD",
+    "modernization_investment": 296700,
+    "annual_savings": {
+      "onpremises_cost_eliminated": 312000,
+      "aws_annual_cost": 9396,
+      "net_annual_savings": 302604
+    },
+    "payback_analysis": {
+      "payback_months": 12,
+      "payback_description": "La inversión de modernización se recupera en aproximadamente 12 meses gracias al ahorro operativo anual de USD 302,604"
+    },
+    "multi_year_projection": {
+      "year_1": {
+        "investment": -296700,
+        "savings": 302604,
+        "net": 5904,
+        "cumulative": 5904
+      },
+      "year_2": {
+        "investment": 0,
+        "savings": 302604,
+        "net": 302604,
+        "cumulative": 308508
+      },
+      "year_3": {
+        "investment": 0,
+        "savings": 302604,
+        "net": 302604,
+        "cumulative": 611112
+      }
+    },
+    "roi_3_years_pct": 206,
+    "npv_3_years_usd": 611112,
+    "risk_adjusted_savings": {
+      "regulatory_fines_avoided_annual": { "min": 60000, "max": 1200000 },
+      "breach_cost_avoided": "Hasta 4% de facturación global (GDPR)",
+      "reactive_remediation_avoided": "3-5x el costo de modernización planificada"
+    }
+  },
+
+  "cost_optimization_opportunities": {
+    "description": "Oportunidades de reducción de costos AWS adicionales post-modernización",
+    "items": [
+      {
+        "opportunity": "AWS Savings Plans (Compute)",
+        "potential_savings_pct": 30,
+        "applicable_services": ["Amazon EKS", "Amazon Aurora"],
+        "commitment": "1 año",
+        "estimated_monthly_savings": 147
+      },
+      {
+        "opportunity": "S3 Intelligent-Tiering para datos históricos",
+        "potential_savings_pct": 40,
+        "applicable_services": ["Amazon S3 — zona audit/"],
+        "commitment": "Ninguno",
+        "estimated_monthly_savings": 8
+      },
+      {
+        "opportunity": "Aurora Serverless v2 para entornos no-prod",
+        "potential_savings_pct": 60,
+        "applicable_services": ["Aurora — entorno dev/test"],
+        "commitment": "Ninguno",
+        "estimated_monthly_savings": 210
+      },
+      {
+        "opportunity": "Enterprise Discount Program (EDP) AWS",
+        "potential_savings_pct": 15,
+        "applicable_services": ["Todos los servicios"],
+        "commitment": "3 años",
+        "estimated_monthly_savings": 117
+      }
+    ],
+    "total_potential_additional_monthly_savings": 482,
+    "optimized_monthly_cost": 301
+  },
+
+  "phase_costs_breakdown": {
+    "description": "Desglose de costos AWS durante el programa de modernización (costos incrementales por fase)",
+    "phases": [
+      {
+        "phase": 1,
+        "name": "Fundamentos de Seguridad",
+        "weeks": "1-6",
+        "incremental_aws_cost_usd": 180,
+        "services_added": ["CloudTrail", "KMS", "Secrets Manager", "Security Hub", "AWS Config"],
+        "notes": "Servicios de bajo costo — impacto mínimo en factura AWS"
+      },
+      {
+        "phase": 2,
+        "name": "Gobernanza y Control",
+        "weeks": "7-12",
+        "incremental_aws_cost_usd": 95,
+        "services_added": ["Audit Manager", "Macie", "Lake Formation", "Glue"],
+        "notes": "Glue es el servicio de mayor costo en esta fase"
+      },
+      {
+        "phase": 3,
+        "name": "Migración de Datos y Aplicación",
+        "weeks": "13-18",
+        "incremental_aws_cost_usd": 490,
+        "services_added": ["Aurora PostgreSQL", "EKS", "DMS (temporal)", "Cognito"],
+        "notes": "Mayor incremento de costo — Aurora y EKS son los servicios principales"
+      },
+      {
+        "phase": 4,
+        "name": "Operaciones y Optimización",
+        "weeks": "19-24",
+        "incremental_aws_cost_usd": 18,
+        "services_added": ["QuickSight", "GuardDuty"],
+        "notes": "Costo marginal — optimización sobre infraestructura ya desplegada"
+      }
+    ]
+  }
+}

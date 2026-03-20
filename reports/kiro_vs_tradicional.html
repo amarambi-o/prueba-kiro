@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kiro vs Tradicional — Bank Modernization Readiness Advisor</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f1923; color: #e8eaed; }
+
+  .header {
+    background: linear-gradient(135deg, #1a2332 0%, #0d1b2a 100%);
+    border-bottom: 2px solid #ff9900;
+    padding: 32px 48px 24px;
+  }
+  .header-top { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .aws-badge {
+    background: #ff9900; color: #000; font-weight: 700;
+    font-size: 11px; padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+  }
+  .kiro-badge {
+    background: #0073bb; color: #fff; font-weight: 700;
+    font-size: 11px; padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+  }
+  h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .subtitle { color: #8a9bb0; font-size: 14px; }
+
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; padding: 32px 48px 0;
+  }
+  .kpi-card {
+    background: #1a2332; border: 1px solid #2a3a4a;
+    border-radius: 10px; padding: 20px; text-align: center;
+  }
+  .kpi-card.highlight { border-color: #ff9900; }
+  .kpi-value { font-size: 36px; font-weight: 800; color: #ff9900; line-height: 1; }
+  .kpi-value.blue { color: #0073bb; }
+  .kpi-value.green { color: #1d8102; }
+  .kpi-label { font-size: 12px; color: #8a9bb0; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-sub { font-size: 11px; color: #5a6a7a; margin-top: 4px; }
+
+  .charts-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 24px; padding: 32px 48px;
+  }
+  .chart-card {
+    background: #1a2332; border: 1px solid #2a3a4a;
+    border-radius: 10px; padding: 24px;
+  }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .chart-sub { font-size: 12px; color: #8a9bb0; margin-bottom: 20px; }
+  .chart-wrap { position: relative; }
+
+  .savings-table {
+    width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px;
+  }
+  .savings-table th {
+    background: #0d1b2a; color: #8a9bb0; font-weight: 600;
+    padding: 10px 12px; text-align: left; border-bottom: 1px solid #2a3a4a;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .savings-table td { padding: 10px 12px; border-bottom: 1px solid #1e2d3d; }
+  .savings-table tr:last-child td { border-bottom: none; font-weight: 700; color: #ff9900; }
+  .savings-table .sin { color: #d13212; }
+  .savings-table .con { color: #1d8102; }
+  .savings-table .ahorro { color: #ff9900; font-weight: 600; }
+
+  .footer {
+    text-align: center; padding: 24px 48px;
+    color: #4a5a6a; font-size: 12px; border-top: 1px solid #1e2d3d;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <span class="kiro-badge">KIRO</span>
+    <span class="aws-badge">AWS MCP</span>
+  </div>
+  <h1>Kiro vs Enfoque Tradicional</h1>
+  <p class="subtitle">Bank Modernization Readiness Advisor — Análisis de Eficiencia y Ahorro | Marzo 2026</p>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card highlight">
+    <div class="kpi-value">75%</div>
+    <div class="kpi-label">Reducción de tiempo</div>
+    <div class="kpi-sub">6–8 sem → 1–2 sem</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value blue">65%</div>
+    <div class="kpi-label">Menos personas</div>
+    <div class="kpi-sub">4–6 → 1–2 especialistas</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value green">4x</div>
+    <div class="kpi-label">Más capacidad</div>
+    <div class="kpi-sub">1–2 apps/mes → 6–8 apps/mes</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value">$182K</div>
+    <div class="kpi-label">Ahorro promedio</div>
+    <div class="kpi-sub">Por engagement de consultoría</div>
+  </div>
+</div>
+
+<div class="charts-grid">
+
+  <!-- Gráfico 1: Tiempo por actividad -->
+  <div class="chart-card">
+    <div class="chart-title">Tiempo por actividad (días)</div>
+    <div class="chart-sub">Comparativa Kiro vs enfoque tradicional — actividades del assessment</div>
+    <div class="chart-wrap"><canvas id="chartTiempo" height="280"></canvas></div>
+  </div>
+
+  <!-- Gráfico 2: Costo total consultoría -->
+  <div class="chart-card">
+    <div class="chart-title">Costo de consultoría (USD)</div>
+    <div class="chart-sub">Fase completa de assessment, arquitectura, roadmap e iteraciones</div>
+    <div class="chart-wrap"><canvas id="chartCosto" height="280"></canvas></div>
+  </div>
+
+  <!-- Gráfico 3: Capacidad del equipo -->
+  <div class="chart-card">
+    <div class="chart-title">Capacidad del equipo (apps/año)</div>
+    <div class="chart-sub">Assessments completados por año con equipo de 3 personas</div>
+    <div class="chart-wrap"><canvas id="chartCapacidad" height="220"></canvas></div>
+  </div>
+
+  <!-- Gráfico 4: Reducción de tiempo por actividad % -->
+  <div class="chart-card">
+    <div class="chart-title">Reducción de tiempo por actividad (%)</div>
+    <div class="chart-sub">Porcentaje de tiempo ahorrado usando Kiro vs proceso manual</div>
+    <div class="chart-wrap"><canvas id="chartReduccion" height="220"></canvas></div>
+  </div>
+
+  <!-- Gráfico 5: Timeline comparativo (full width) -->
+  <div class="chart-card full">
+    <div class="chart-title">Timeline del assessment — semanas</div>
+    <div class="chart-sub">Duración de cada fase del proceso completo de modernización readiness</div>
+    <div class="chart-wrap"><canvas id="chartTimeline" height="160"></canvas></div>
+  </div>
+
+  <!-- Tabla de ahorro detallado (full width) -->
+  <div class="chart-card full">
+    <div class="chart-title">Detalle de ahorro por actividad</div>
+    <div class="chart-sub">Tiempo, personas y costo estimado — Kiro vs enfoque tradicional</div>
+    <table class="savings-table">
+      <thead>
+        <tr>
+          <th>Actividad</th>
+          <th>Sin Kiro</th>
+          <th>Con Kiro</th>
+          <th>Personas sin Kiro</th>
+          <th>Personas con Kiro</th>
+          <th>Ahorro tiempo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Inventario de aplicaciones</td><td class="sin">2 semanas</td><td class="con">2 horas</td><td>2 arquitectos</td><td>1 arquitecto</td><td class="ahorro">~85%</td></tr>
+        <tr><td>Perfilado SQL Server</td><td class="sin">1 semana</td><td class="con">30 min</td><td>1 DBA + 1 analista</td><td>1 analista</td><td class="ahorro">~95%</td></tr>
+        <tr><td>Análisis calidad de datos</td><td class="sin">2 semanas</td><td class="con">1 hora</td><td>2 analistas</td><td>1 analista</td><td class="ahorro">~90%</td></tr>
+        <tr><td>Evaluación de seguridad</td><td class="sin">1 semana</td><td class="con">2 horas</td><td>1 especialista</td><td>1 arquitecto</td><td class="ahorro">~80%</td></tr>
+        <tr><td>Evaluación compliance</td><td class="sin">2 semanas</td><td class="con">3 horas</td><td>1 legal + 1 arq.</td><td>1 arquitecto</td><td class="ahorro">~85%</td></tr>
+        <tr><td>Cálculo readiness scores</td><td class="sin">3 días</td><td class="con">Automático</td><td>1 analista senior</td><td>0 (automatizado)</td><td class="ahorro">~100%</td></tr>
+        <tr><td>Reporte de assessment</td><td class="sin">1 semana</td><td class="con">1 hora</td><td>1 consultor senior</td><td>1 consultor</td><td class="ahorro">~90%</td></tr>
+        <tr><td>Arquitectura objetivo AWS</td><td class="sin">1 semana</td><td class="con">2 horas</td><td>1 arquitecto AWS</td><td>1 arquitecto</td><td class="ahorro">~85%</td></tr>
+        <tr><td>Roadmap de modernización</td><td class="sin">3 días</td><td class="con">1 hora</td><td>1 consultor + 1 PM</td><td>1 consultor</td><td class="ahorro">~85%</td></tr>
+        <tr><td>Executive summary</td><td class="sin">2 días</td><td class="con">30 min</td><td>1 consultor senior</td><td>1 consultor</td><td class="ahorro">~85%</td></tr>
+        <tr><td><strong>TOTAL</strong></td><td class="sin"><strong>6–8 semanas</strong></td><td class="con"><strong>1–2 semanas</strong></td><td><strong>4–6 personas</strong></td><td><strong>1–2 personas</strong></td><td class="ahorro"><strong>~75%</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="footer">
+  Bank Modernization Readiness Advisor — Kiro + AWS MCP | Marzo 2026 | Confidencial — Uso interno
+</div>
+
+<script>
+const C_TRADICIONAL = '#d13212';
+const C_KIRO        = '#0073bb';
+const C_AHORRO      = '#ff9900';
+const C_GRID        = '#2a3a4a';
+const C_TEXT        = '#8a9bb0';
+
+Chart.defaults.color = C_TEXT;
+Chart.defaults.borderColor = C_GRID;
+
+// ── Gráfico 1: Tiempo por actividad (días) ──────────────────────────────────
+new Chart(document.getElementById('chartTiempo'), {
+  type: 'bar',
+  data: {
+    labels: ['Inventario', 'Perfilado SQL', 'Calidad datos', 'Seguridad', 'Compliance', 'Scores', 'Assessment', 'Arquitectura', 'Roadmap', 'Exec Summary'],
+    datasets: [
+      { label: 'Sin Kiro (días)', data: [14,7,14,7,14,3,7,7,3,2], backgroundColor: C_TRADICIONAL, borderRadius: 4 },
+      { label: 'Con Kiro (días)', data: [0.08,0.02,0.04,0.08,0.13,0,0.04,0.08,0.04,0.02], backgroundColor: C_KIRO, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      x: { grid: { color: C_GRID }, ticks: { font: { size: 10 } } },
+      y: { grid: { color: C_GRID }, title: { display: true, text: 'Días' } }
+    }
+  }
+});
+
+// ── Gráfico 2: Costo consultoría ────────────────────────────────────────────
+new Chart(document.getElementById('chartCosto'), {
+  type: 'bar',
+  data: {
+    labels: ['Assessment\ny diagnóstico', 'Arquitectura\ny diseño', 'Planificación\ny roadmap', 'Iteraciones\ny updates', 'TOTAL'],
+    datasets: [
+      { label: 'Sin Kiro (USD K)', data: [80,100,50,40,270], backgroundColor: C_TRADICIONAL, borderRadius: 4 },
+      { label: 'Con Kiro (USD K)', data: [20,40,20,7.5,87.5], backgroundColor: C_KIRO, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      x: { grid: { color: C_GRID }, ticks: { font: { size: 10 } } },
+      y: { grid: { color: C_GRID }, title: { display: true, text: 'USD (miles)' } }
+    }
+  }
+});
+
+// ── Gráfico 3: Capacidad del equipo ─────────────────────────────────────────
+new Chart(document.getElementById('chartCapacidad'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Sin Kiro (9 apps/año)', 'Ganancia con Kiro (+21 apps/año)'],
+    datasets: [{
+      data: [9, 21],
+      backgroundColor: [C_TRADICIONAL, C_KIRO],
+      borderColor: '#1a2332', borderWidth: 3
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 } } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ctx.label + ': ' + ctx.raw + ' apps'
+        }
+      }
+    },
+    cutout: '65%'
+  }
+});
+
+// ── Gráfico 4: Reducción de tiempo % ────────────────────────────────────────
+new Chart(document.getElementById('chartReduccion'), {
+  type: 'bar',
+  indexAxis: 'y',
+  data: {
+    labels: ['Perfilado SQL', 'Scores (auto)', 'Calidad datos', 'Assessment', 'Inventario', 'Compliance', 'Arquitectura', 'Roadmap', 'Seguridad'],
+    datasets: [{
+      label: '% tiempo ahorrado',
+      data: [95, 100, 90, 90, 85, 85, 85, 85, 80],
+      backgroundColor: ctx => {
+        const v = ctx.raw;
+        return v >= 95 ? '#1d8102' : v >= 85 ? C_KIRO : C_AHORRO;
+      },
+      borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: C_GRID }, min: 0, max: 100,
+           title: { display: true, text: '% reducción de tiempo' } },
+      y: { grid: { color: C_GRID }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// ── Gráfico 5: Timeline comparativo ─────────────────────────────────────────
+new Chart(document.getElementById('chartTimeline'), {
+  type: 'bar',
+  data: {
+    labels: ['Inventario', 'Perfilado SQL', 'Calidad datos', 'Seguridad', 'Compliance', 'Scores', 'Reportes (x4)'],
+    datasets: [
+      {
+        label: 'Sin Kiro (semanas)',
+        data: [2, 1, 2, 1, 2, 0.6, 2],
+        backgroundColor: C_TRADICIONAL + 'cc', borderRadius: 4,
+        stack: 'tradicional'
+      },
+      {
+        label: 'Con Kiro (semanas)',
+        data: [0.01, 0.003, 0.006, 0.01, 0.02, 0, 0.02],
+        backgroundColor: C_KIRO + 'cc', borderRadius: 4,
+        stack: 'kiro'
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      x: { grid: { color: C_GRID } },
+      y: { grid: { color: C_GRID }, title: { display: true, text: 'Semanas' } }
+    }
+  }
+});
+</script>
+</body>
+</html>

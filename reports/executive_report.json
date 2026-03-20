@@ -1,0 +1,181 @@
+{
+  "metadata": {
+    "title": "Reporte Ejecutivo de Modernización — Sistema Bancario Legacy",
+    "system": "payments-core / BankDemo",
+    "version": "1.0",
+    "generated_at": "2026-03-20",
+    "classification": "Confidential — Executive Use Only",
+    "prepared_by": "Bank Modernization Readiness Advisor — Kiro + AWS",
+    "audience": ["CIO", "CTO", "Head of Risk", "Cloud Director", "Arquitectura Empresarial"],
+    "evidence_source": "700 registros reales — payments_raw / BankDemo / NTTD-HHM6P74"
+  },
+  "executive_summary": {
+    "headline": "El sistema payments-core presenta exposición regulatoria activa frente a PCI-DSS, SOX, GDPR y Basel III. La modernización a AWS en 24 semanas reduce el riesgo regulatorio de 74/100 a 20/100 con un ROI del 206% a 3 años.",
+    "key_findings": [
+      "Cloud Readiness Score de 38/100 — baja preparación para migración",
+      "15.4% de registros con errores críticos de calidad de datos",
+      "130 hallazgos de compliance en 4 marcos regulatorios",
+      "Ausencia total de cifrado, autenticación y audit trail",
+      "Credenciales hardcodeadas en código fuente — exposición activa"
+    ],
+    "immediate_risk": "El sistema no superaría una auditoría PCI-DSS ni una revisión SOX sin observaciones materiales en su estado actual.",
+    "recommendation": "Aprobar programa de modernización con inicio de Fase 1 en las próximas 4 semanas."
+  },
+  "scores": {
+    "current": {
+      "cloud_readiness": 38,
+      "data_quality": 76,
+      "security_risk": 78,
+      "regulatory_risk": 74,
+      "migration_risk": 72,
+      "pci_readiness": 56,
+      "encryption_coverage": 35,
+      "pii_exposure": 72,
+      "auditability": 87,
+      "general_readiness": 40
+    },
+    "target_post_modernization": {
+      "cloud_readiness": 85,
+      "data_quality": 92,
+      "security_risk": 25,
+      "regulatory_risk": 20,
+      "pci_readiness": 90,
+      "encryption_coverage": 98,
+      "pii_exposure": 10,
+      "auditability": 98
+    }
+  },
+  "data_quality": {
+    "total_records": 700,
+    "clean_records": 592,
+    "error_records": 108,
+    "error_rate_pct": 15.4,
+    "dq_score": 76,
+    "critical_findings": [
+      { "rule": "INVALID_AMOUNT", "affected": 101, "severity": "CRITICAL", "frameworks": ["SOX", "PCI-DSS"] },
+      { "rule": "MISSING_PAYMENT_ID", "affected": 7, "severity": "CRITICAL", "frameworks": ["SOX", "PCI-DSS"] },
+      { "rule": "INVALID_TRANSACTION_STATUS", "affected": 119, "severity": "HIGH", "frameworks": ["PCI-DSS", "SOX"] },
+      { "rule": "MISSING_CUSTOMER_IDENTITY", "affected": 16, "severity": "HIGH", "frameworks": ["GDPR", "PCI-DSS"] },
+      { "rule": "PLAINTEXT_PII_FIELD", "affected_values": 1249, "severity": "HIGH", "frameworks": ["GDPR", "PCI-DSS"] },
+      { "rule": "MISSING_SOURCE_SYSTEM", "affected": 109, "severity": "MEDIUM", "frameworks": ["SOX", "Basel III"] },
+      { "rule": "NULL_TIMESTAMP", "affected": 55, "severity": "MEDIUM", "frameworks": ["SOX", "Basel III"] }
+    ]
+  },
+  "compliance_assessment": {
+    "total_findings": 130,
+    "scores": {
+      "regulatory_risk": 44,
+      "pci_readiness": 56,
+      "sox_traceability": 89,
+      "pii_exposure": 72,
+      "encryption_coverage": 35,
+      "auditability": 87
+    },
+    "frameworks": {
+      "PCI-DSS": {
+        "exposure": "HIGH",
+        "critical_gaps": ["Req. 3 — cifrado ausente", "Req. 7 — sin control de acceso", "Req. 8 — sin autenticación", "Req. 10 — sin audit log"]
+      },
+      "SOX": {
+        "exposure": "HIGH",
+        "critical_gaps": ["Sec. 404 — sin audit trail financiero", "Sin trazabilidad de transacciones individuales"]
+      },
+      "GDPR": {
+        "exposure": "MEDIUM-HIGH",
+        "critical_gaps": ["Art. 32 — PII en texto plano", "Sin controles de acceso a datos personales"]
+      },
+      "Basel III": {
+        "exposure": "MEDIUM-HIGH",
+        "critical_gaps": ["BCBS 239 — sin linaje de datos", "Sin gestión formal de riesgo operacional"]
+      }
+    },
+    "audit_scenario": {
+      "pci_dss_outcome": "FAIL — observaciones materiales en Req. 3, 7, 8, 10",
+      "sox_outcome": "OBSERVACIONES MATERIALES — audit trail ausente, trazabilidad incompleta",
+      "potential_fines_usd_annual": "60000-1200000"
+    }
+  },
+  "security_gaps": [
+    { "control": "Autenticación", "status": "AUSENTE", "framework": ["PCI-DSS Req. 8", "SOX"], "risk": "ALTO" },
+    { "control": "Gestión de secretos", "status": "CREDENCIALES EN CÓDIGO", "framework": ["PCI-DSS Req. 8"], "risk": "ALTO" },
+    { "control": "Cifrado en reposo", "status": "NO IMPLEMENTADO", "framework": ["PCI-DSS Req. 3", "GDPR Art. 32"], "risk": "ALTO" },
+    { "control": "Audit trail", "status": "AUSENTE", "framework": ["SOX Sec. 404", "PCI-DSS Req. 10"], "risk": "ALTO" },
+    { "control": "Alta disponibilidad", "status": "NO CONFIGURADA", "framework": ["SOX"], "risk": "ALTO" },
+    { "control": "Linaje de datos", "status": "AUSENTE", "framework": ["SOX", "Basel III BCBS 239"], "risk": "MEDIO" }
+  ],
+  "risk_of_inaction": {
+    "regulatory_fines_usd_annual": { "min": 60000, "max": 1200000 },
+    "gdpr_breach_exposure": "Hasta 4% de facturación global",
+    "reactive_remediation_multiplier": "3-5x mayor que remediación planificada",
+    "technical_debt_growth_annual_pct": 25,
+    "competitive_impact": "Incapacidad de adoptar servicios cloud-native en 24 meses"
+  },
+  "target_architecture": {
+    "layers": [
+      { "name": "Gobernanza y Control", "services": ["AWS Control Tower", "AWS Security Hub", "AWS Audit Manager", "AWS Config"] },
+      { "name": "Identidad y Acceso", "services": ["AWS IAM", "AWS Secrets Manager", "Amazon Cognito"] },
+      { "name": "Perímetro y Cómputo", "services": ["AWS WAF", "Application Load Balancer", "Amazon EKS"] },
+      { "name": "Datos", "services": ["Aurora PostgreSQL Multi-AZ", "Amazon S3 SSE-KMS", "AWS KMS", "Amazon Macie"] },
+      { "name": "Analytics y Gobernanza", "services": ["AWS Glue", "AWS Lake Formation", "Amazon Athena", "Amazon QuickSight"] },
+      { "name": "Auditoría y Observabilidad", "services": ["AWS CloudTrail", "Amazon CloudWatch", "Amazon EventBridge", "Amazon SNS"] }
+    ],
+    "key_services_justification": [
+      { "service": "AWS KMS + S3 SSE-KMS", "resolves": "PII en texto plano", "frameworks": ["PCI-DSS Req. 3", "GDPR Art. 32"] },
+      { "service": "AWS CloudTrail (WORM)", "resolves": "Ausencia de audit trail", "frameworks": ["SOX Sec. 404", "PCI-DSS Req. 10"] },
+      { "service": "AWS Secrets Manager", "resolves": "Credenciales hardcodeadas", "frameworks": ["PCI-DSS Req. 8"] },
+      { "service": "Amazon Cognito + IAM", "resolves": "Sin autenticación ni segregación", "frameworks": ["PCI-DSS Req. 7", "PCI-DSS Req. 8"] },
+      { "service": "AWS Glue + Lake Formation", "resolves": "Sin linaje de datos", "frameworks": ["SOX", "Basel III BCBS 239"] },
+      { "service": "Amazon Macie", "resolves": "PII sin clasificar en S3", "frameworks": ["GDPR Art. 30", "PCI-DSS Req. 3.2"] },
+      { "service": "AWS Audit Manager", "resolves": "Evidencia manual de controles", "frameworks": ["SOX Sec. 302/404", "PCI-DSS"] },
+      { "service": "Aurora PostgreSQL Multi-AZ", "resolves": "SQL Server sin HA ni cifrado", "frameworks": ["PCI-DSS Req. 3", "SOX"] }
+    ]
+  },
+  "migration_complexity": {
+    "overall": "HIGH",
+    "dimensions": [
+      { "area": "Autenticación", "current": "Ninguna", "target": "Amazon Cognito + IAM", "complexity": "HIGH" },
+      { "area": "Gestión de secretos", "current": "Hardcodeados", "target": "AWS Secrets Manager", "complexity": "MEDIUM" },
+      { "area": "Cifrado en reposo", "current": "Ninguno", "target": "AWS KMS + RDS encryption", "complexity": "HIGH" },
+      { "area": "Audit logging", "current": "Ninguno", "target": "AWS CloudTrail + CloudWatch", "complexity": "MEDIUM" },
+      { "area": "Linaje de datos", "current": "Ausente", "target": "AWS Glue + Lake Formation", "complexity": "HIGH" },
+      { "area": "Controles PCI-DSS", "current": "Insuficientes", "target": "WAF + VPC + Security Groups", "complexity": "HIGH" },
+      { "area": "Trazabilidad SOX", "current": "Parcial", "target": "CloudTrail + Athena audit queries", "complexity": "MEDIUM" }
+    ]
+  },
+  "financials": {
+    "modernization_investment_usd": {
+      "architecture_design": 48000,
+      "phase_1_security": 35000,
+      "phase_2_governance": 42000,
+      "phase_3_migration": 68000,
+      "phase_4_operations": 28000,
+      "pci_dss_audit_qsa": 25000,
+      "team_training": 12000,
+      "contingency_15pct": 38700,
+      "total": 296700
+    },
+    "aws_monthly_cost_usd": 783,
+    "aws_annual_cost_usd": 9396,
+    "onpremises_annual_cost_usd": 312000,
+    "annual_savings_usd": 302604,
+    "payback_months": 12,
+    "roi_3_years_pct": 206,
+    "cumulative_savings_3_years_usd": 611112
+  },
+  "roadmap_summary": {
+    "total_duration_weeks": 24,
+    "phases": [
+      { "phase": 1, "name": "Fundamentos de Seguridad", "weeks": "1-6", "priority": "CRITICAL" },
+      { "phase": 2, "name": "Gobernanza y Control", "weeks": "7-12", "priority": "HIGH" },
+      { "phase": 3, "name": "Migración de Datos y Aplicación", "weeks": "13-18", "priority": "HIGH" },
+      { "phase": 4, "name": "Operaciones y Optimización", "weeks": "19-24", "priority": "MEDIUM" }
+    ]
+  },
+  "immediate_actions": [
+    { "priority": 1, "action": "Habilitar AWS CloudTrail multi-región", "timeline_days": 1, "resolves": "SOX audit trail" },
+    { "priority": 2, "action": "Cifrar buckets S3 con KMS CMK", "timeline_days": 3, "resolves": "PCI-DSS Req. 3" },
+    { "priority": 3, "action": "Migrar credenciales a Secrets Manager", "timeline_days": 5, "resolves": "PCI-DSS Req. 8" },
+    { "priority": 4, "action": "Habilitar Security Hub + estándar PCI-DSS", "timeline_days": 1, "resolves": "Visibilidad de postura" },
+    { "priority": 5, "action": "Aprobar programa de modernización", "timeline_days": 14, "resolves": "Inicio formal del programa" }
+  ]
+}
