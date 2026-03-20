@@ -2,7 +2,7 @@
   "metadata": {
     "title": "Arquitectura Objetivo AWS — Modernización Sistema Bancario Legacy",
     "system": "payments-core / BankDemo",
-    "version": "1.0",
+    "version": "2.0",
     "generated_at": "2026-03-20",
     "alignment": "AWS Financial Services Reference Architecture",
     "regulatory_frameworks": ["PCI-DSS v4.0", "SOX", "GDPR", "Basel III", "NIST CSF"],
@@ -50,6 +50,11 @@
       "services": ["AWS IAM", "AWS Secrets Manager", "Amazon Cognito"]
     },
     {
+      "layer": "network_and_perimeter",
+      "name": "Red y Perímetro",
+      "services": ["Amazon VPC", "AWS WAF", "Application Load Balancer", "VPC Endpoints"]
+    },
+    {
       "layer": "compute_and_application",
       "name": "Cómputo y Aplicación",
       "services": ["Amazon EKS", "AWS WAF", "Application Load Balancer"]
@@ -70,38 +75,193 @@
       "services": ["AWS CloudTrail", "Amazon CloudWatch", "Amazon EventBridge", "Amazon SNS"]
     }
   ],
+  "network_architecture": {
+    "vpc_cidr": "10.0.0.0/16",
+    "region": "us-east-2",
+    "availability_zones": ["us-east-2a", "us-east-2b"],
+    "subnets": {
+      "public": [
+        {"name": "public-az-a", "cidr": "10.0.1.0/24", "az": "us-east-2a", "purpose": "ALB, WAF"},
+        {"name": "public-az-b", "cidr": "10.0.2.0/24", "az": "us-east-2b", "purpose": "ALB, WAF (HA)"}
+      ],
+      "private_app": [
+        {"name": "app-az-a", "cidr": "10.0.10.0/24", "az": "us-east-2a", "purpose": "EKS nodes, payments-core"},
+        {"name": "app-az-b", "cidr": "10.0.11.0/24", "az": "us-east-2b", "purpose": "EKS nodes (HA)"}
+      ],
+      "private_data": [
+        {"name": "data-az-a", "cidr": "10.0.20.0/24", "az": "us-east-2a", "purpose": "Aurora primary"},
+        {"name": "data-az-b", "cidr": "10.0.21.0/24", "az": "us-east-2b", "purpose": "Aurora replica (Multi-AZ)"}
+      ]
+    },
+    "vpc_endpoints": [
+      {"service": "com.amazonaws.us-east-2.s3", "type": "Gateway"},
+      {"service": "com.amazonaws.us-east-2.kms", "type": "Interface"},
+      {"service": "com.amazonaws.us-east-2.secretsmanager", "type": "Interface"},
+      {"service": "com.amazonaws.us-east-2.athena", "type": "Interface"},
+      {"service": "com.amazonaws.us-east-2.glue", "type": "Interface"}
+    ],
+    "security_groups": {
+      "alb-sg": {"inbound": ["443/tcp from 0.0.0.0/0"], "outbound": ["8080/tcp to app-sg"]},
+      "app-sg": {"inbound": ["8080/tcp from alb-sg"], "outbound": ["5432/tcp to data-sg", "443/tcp to vpc-endpoints"]},
+      "data-sg": {"inbound": ["5432/tcp from app-sg"], "outbound": []}
+    }
+  },
+  "banking_specific_controls": {
+    "pci_dss_v4": {
+      "req_1_network_security": {
+        "control": "VPC con subnets privadas + Security Groups restrictivos",
+        "implementation": "No acceso directo a base de datos desde internet; WAF en perímetro",
+        "status": "required"
+      },
+      "req_3_data_protection": {
+        "control": "KMS CMK para todos los datos de tarjetas y PII",
+        "implementation": "SSE-KMS en S3 + cifrado en Aurora + TLS en tránsito",
+        "status": "required"
+      },
+      "req_7_access_control": {
+        "control": "IAM roles de mínimo privilegio + Lake Formation RBAC",
+        "implementation": "Column-level security en tablas con PII; roles por función",
+        "status": "required"
+      },
+      "req_8_authentication": {
+        "control": "MFA obligatorio + IAM database authentication",
+        "implementation": "Sin contraseñas hardcodeadas; Secrets Manager para rotación",
+        "status": "required"
+      },
+      "req_10_logging": {
+        "control": "CloudTrail multi-región + VPC Flow Logs + Aurora audit logs",
+        "implementation": "Logs inmutables con Object Lock COMPLIANCE; retención 7 años",
+        "status": "required"
+      }
+    },
+    "sox_controls": {
+      "section_302_404": {
+        "control": "Audit Manager con assessment SOX activo",
+        "implementation": "Evidencia automática de controles; mapeo a recursos AWS",
+        "status": "required"
+      },
+      "data_lineage": {
+        "control": "Glue Data Catalog + Lake Formation lineage",
+        "implementation": "Trazabilidad completa de transformaciones de datos financieros",
+        "status": "required"
+      },
+      "segregation_of_duties": {
+        "control": "Control Tower SCPs + IAM roles separados por función",
+        "implementation": "Entornos prod/dev separados; aprobación dual para break-glass",
+        "status": "required"
+      }
+    },
+    "gdpr_controls": {
+      "art_30_records": {
+        "control": "Macie + Lake Formation para inventario de datos personales",
+        "implementation": "Detección automática diaria de PII en todos los buckets",
+        "status": "required"
+      },
+      "art_32_security": {
+        "control": "KMS CMK + TLS 1.3 + column masking en Lake Formation",
+        "implementation": "Cifrado end-to-end de datos personales",
+        "status": "required"
+      },
+      "data_minimization": {
+        "control": "Lake Formation column-level security por rol",
+        "implementation": "Analistas no acceden a customer_name ni customer_email",
+        "status": "required"
+      }
+    },
+    "basel_iii_bcbs239": {
+      "data_aggregation": {
+        "control": "Glue ETL + Athena para agregación de datos de riesgo",
+        "implementation": "Pipeline automatizado con linaje completo",
+        "status": "required"
+      },
+      "risk_reporting": {
+        "control": "QuickSight dashboards + Athena named queries",
+        "implementation": "Reportes de riesgo reproducibles y auditables",
+        "status": "required"
+      }
+    }
+  },
+  "disaster_recovery": {
+    "rpo_rto_targets": [
+      {"component": "Aurora PostgreSQL", "rpo_hours": 1, "rto_hours": 4, "strategy": "Multi-AZ automático + backups 35 días"},
+      {"component": "S3 Data Lake", "rpo_hours": 0, "rto_hours": 1, "strategy": "Versioning + Cross-region replication"},
+      {"component": "EKS payments-core", "rpo_minutes": 15, "rto_hours": 2, "strategy": "Multi-AZ node groups + HPA"},
+      {"component": "CloudTrail logs", "rpo_hours": 0, "rto_hours": 0, "strategy": "Object Lock COMPLIANCE — inmutable"},
+      {"component": "Secrets Manager", "rpo_hours": 0, "rto_hours": 1, "strategy": "Cross-region replication"}
+    ],
+    "backup_strategy": {
+      "aurora": {"automated_backups_days": 35, "manual_snapshots": "weekly", "cross_region": true},
+      "s3": {"versioning": true, "cross_region_replication": true, "destination_region": "us-west-2"},
+      "cloudtrail": {"object_lock": "COMPLIANCE", "retention_years": 7}
+    }
+  },
+  "compliance_mapping": {
+    "PCI-DSS v4.0": {
+      "req_1": "VPC + Security Groups + WAF",
+      "req_2": "Control Tower SCPs + Config Rules",
+      "req_3": "KMS CMK + SSE-KMS + Macie",
+      "req_4": "TLS 1.3 en ALB + Aurora + VPC Endpoints",
+      "req_7": "IAM roles + Lake Formation RBAC",
+      "req_8": "IAM + MFA + Secrets Manager",
+      "req_10": "CloudTrail + VPC Flow Logs + CloudWatch",
+      "req_11": "Security Hub + GuardDuty + Inspector",
+      "req_12": "Audit Manager + Config + Control Tower"
+    },
+    "SOX": {
+      "section_302": "Audit Manager assessment SOX",
+      "section_404": "Config Rules + CloudTrail + Audit Manager evidence",
+      "data_lineage": "Glue Data Catalog + Lake Formation",
+      "segregation": "Control Tower accounts + IAM roles"
+    },
+    "GDPR": {
+      "art_5_principles": "Lake Formation data minimization",
+      "art_25_privacy_by_design": "KMS + column masking por defecto",
+      "art_30_records": "Macie inventory + Glue Catalog",
+      "art_32_security": "KMS + TLS + Security Hub",
+      "art_33_breach_notification": "GuardDuty + EventBridge + SNS"
+    },
+    "Basel III BCBS 239": {
+      "data_aggregation": "Glue ETL + Athena",
+      "risk_reporting": "QuickSight + Athena named queries",
+      "data_quality": "DQ Engine + Glue Data Quality",
+      "auditability": "CloudTrail + Audit Manager"
+    },
+    "NIST CSF": {
+      "identify": "Security Hub + Config + Macie",
+      "protect": "KMS + IAM + WAF + Lake Formation",
+      "detect": "GuardDuty + Security Hub + CloudTrail",
+      "respond": "EventBridge + Lambda + SNS",
+      "recover": "Aurora Multi-AZ + S3 versioning + DR plan"
+    }
+  },
   "services": [
     {
       "id": "control-tower",
       "name": "AWS Control Tower",
       "layer": "governance_and_control",
-      "risk_resolved": "Configuraciones inseguras por defecto en cuentas AWS; falta de gobernanza multi-cuenta",
+      "risk_resolved": "Configuraciones inseguras por defecto; falta de gobernanza multi-cuenta",
       "regulatory_coverage": ["PCI-DSS Req. 1", "PCI-DSS Req. 2", "SOX — Segregación de entornos"],
-      "security_improvement": "SCPs preventivos que bloquean acciones prohibidas en todas las cuentas",
-      "compliance_improvement": "Evidencia automática de controles; integración con Audit Manager",
-      "critical_guardrails": [
-        "Disallow public S3 buckets",
-        "Require CloudTrail in all regions",
-        "Disallow root account usage",
-        "Require MFA for IAM users",
-        "Disallow creation of access keys for root"
-      ],
       "account_structure": {
         "management": "Cuenta raíz de Control Tower",
         "security": "Security Hub, GuardDuty, Macie centralizados",
         "log-archive": "CloudTrail logs con Object Lock",
         "payments-prod": "Workload de producción",
         "payments-dev": "Entorno de desarrollo y pruebas"
-      }
+      },
+      "critical_guardrails": [
+        "Disallow public S3 buckets",
+        "Require CloudTrail in all regions",
+        "Disallow root account usage",
+        "Require MFA for IAM users",
+        "Disallow creation of access keys for root"
+      ]
     },
     {
       "id": "security-hub",
       "name": "AWS Security Hub",
       "layer": "governance_and_control",
-      "risk_resolved": "Visibilidad fragmentada de postura de seguridad; hallazgos dispersos sin priorización",
+      "risk_resolved": "Visibilidad fragmentada de postura de seguridad",
       "regulatory_coverage": ["PCI-DSS Req. 11", "NIST CSF — Identify/Detect"],
-      "security_improvement": "Security Score consolidado; correlación de findings de GuardDuty, Macie, Config, Inspector",
-      "compliance_improvement": "Estándares preconstruidos: PCI-DSS, CIS AWS Foundations, AWS FSBP",
       "enabled_standards": ["PCI-DSS v3.2.1", "CIS AWS Foundations Benchmark v1.4", "AWS Foundational Security Best Practices"],
       "integrations": ["Amazon GuardDuty", "Amazon Macie", "AWS Config", "AWS Inspector", "AWS Firewall Manager"]
     },
@@ -109,10 +269,8 @@
       "id": "audit-manager",
       "name": "AWS Audit Manager",
       "layer": "governance_and_control",
-      "risk_resolved": "Proceso manual de auditoría propenso a errores; evidencia incompleta o no reproducible",
+      "risk_resolved": "Proceso manual de auditoría propenso a errores",
       "regulatory_coverage": ["SOX Sección 302/404", "PCI-DSS — Evidencia de controles", "SOC 2"],
-      "security_improvement": "Mapeo automático de controles a recursos AWS; detección de gaps en tiempo real",
-      "compliance_improvement": "Frameworks preconstruidos; reportes listos para auditores externos",
       "active_assessments": ["PCI-DSS", "SOX"],
       "evidence_retention_years": 7,
       "evidence_storage": "s3://log-archive/audit-manager/"
@@ -121,10 +279,8 @@
       "id": "aws-config",
       "name": "AWS Config",
       "layer": "governance_and_control",
-      "risk_resolved": "Drift de configuración no detectado; recursos mal configurados",
+      "risk_resolved": "Drift de configuración no detectado",
       "regulatory_coverage": ["PCI-DSS Req. 2", "PCI-DSS Req. 10", "Basel III — Riesgo operacional"],
-      "security_improvement": "Remediación automática de configuraciones no conformes",
-      "compliance_improvement": "Historial completo de cambios; timeline de compliance por recurso",
       "critical_rules": [
         "rds-storage-encrypted",
         "s3-bucket-server-side-encryption-enabled",
@@ -143,8 +299,6 @@
       "layer": "audit_and_observability",
       "risk_resolved": "Ausencia de audit trail — hallazgo crítico con 130 findings de compliance",
       "regulatory_coverage": ["SOX Sección 404", "PCI-DSS Req. 10", "Basel III BCBS 239"],
-      "security_improvement": "Registro inmutable de todas las llamadas API; detección de actividad anómala",
-      "compliance_improvement": "Evidencia forense completa; integración con Athena para consultas SQL de auditoría",
       "configuration": {
         "multi_region": true,
         "log_file_validation": true,
@@ -162,8 +316,6 @@
       "layer": "data",
       "risk_resolved": "PII Exposure Score 72/100; customer_name y customer_email en texto plano",
       "regulatory_coverage": ["PCI-DSS Req. 3", "GDPR Art. 32", "NIST 800-53 SC-28"],
-      "security_improvement": "CMK por zona de datos; rotación automática anual; audit log de uso en CloudTrail",
-      "compliance_improvement": "Encryption Coverage: 35/100 → 98/100 post-implementación",
       "cmk_structure": {
         "payments-data-cmk": "Aurora + S3 datos de pagos",
         "audit-logs-cmk": "CloudTrail + Audit Manager evidence",
@@ -177,10 +329,8 @@
       "id": "macie",
       "name": "Amazon Macie",
       "layer": "data",
-      "risk_resolved": "PII en texto plano en clean/ y errors/; campos customer_name, customer_email sin clasificar",
+      "risk_resolved": "PII en texto plano en clean/ y errors/",
       "regulatory_coverage": ["GDPR Art. 30", "PCI-DSS Req. 3.2"],
-      "security_improvement": "Detección automática de PAN, nombres, emails, números de cuenta en S3",
-      "compliance_improvement": "Inventario automático de datos sensibles; findings integrados con Security Hub",
       "configuration": {
         "enabled_buckets": ["bankdemo"],
         "job_frequency": "DAILY",
@@ -192,10 +342,8 @@
       "id": "lake-formation",
       "name": "AWS Lake Formation",
       "layer": "analytics_and_governance",
-      "risk_resolved": "Acceso sin restricciones a datos PII; analistas con acceso a campos sensibles innecesariamente",
+      "risk_resolved": "Acceso sin restricciones a datos PII",
       "regulatory_coverage": ["PCI-DSS Req. 7", "GDPR — Minimización de datos", "SOX — Segregación de funciones"],
-      "security_improvement": "Column-level security; row-level security; acceso por rol IAM",
-      "compliance_improvement": "Linaje de datos completo; auditoría de acceso a datos",
       "role_permissions": {
         "analyst-role": {
           "tables": ["payments_clean"],
@@ -219,10 +367,8 @@
       "id": "glue",
       "name": "AWS Glue",
       "layer": "analytics_and_governance",
-      "risk_resolved": "Ausencia de linaje de datos — hallazgo SOX/Basel III en compliance assessment",
+      "risk_resolved": "Ausencia de linaje de datos — hallazgo SOX/Basel III",
       "regulatory_coverage": ["SOX — Trazabilidad de datos financieros", "Basel III BCBS 239"],
-      "security_improvement": "Jobs con IAM roles de mínimo privilegio; conexiones cifradas a fuentes",
-      "compliance_improvement": "Data Catalog como fuente única de verdad; linaje visual de transformaciones",
       "components": {
         "crawlers": ["payments-raw-crawler", "payments-clean-crawler", "payments-errors-crawler"],
         "jobs": ["raw-to-clean-etl", "compliance-enrichment-job"],
@@ -234,10 +380,8 @@
       "id": "athena",
       "name": "Amazon Athena",
       "layer": "analytics_and_governance",
-      "risk_resolved": "Imposibilidad de consultar datos históricos para auditorías; análisis ad-hoc de compliance",
+      "risk_resolved": "Imposibilidad de consultar datos históricos para auditorías",
       "regulatory_coverage": ["SOX — Consulta de registros financieros históricos", "PCI-DSS Req. 10.7"],
-      "security_improvement": "Consultas auditadas en CloudTrail; resultados cifrados con KMS",
-      "compliance_improvement": "Tablas payments_clean, payments_errors, compliance_findings consultables por auditores",
       "workgroups": {
         "primary": "Pipeline operacional",
         "audit": "Consultas de auditoría — output cifrado con KMS"
@@ -253,16 +397,14 @@
       "id": "s3",
       "name": "Amazon S3",
       "layer": "data",
-      "risk_resolved": "Datos de pagos sin cifrar; sin segregación por sensibilidad; sin retención controlada",
+      "risk_resolved": "Datos de pagos sin cifrar; sin segregación por sensibilidad",
       "regulatory_coverage": ["PCI-DSS Req. 3", "PCI-DSS Req. 9", "SOX — Retención 7 años"],
-      "security_improvement": "Bucket policies que bloquean HTTP; Object Lock WORM para audit logs; versioning",
-      "compliance_improvement": "Lifecycle policies para retención regulatoria; replication cross-region para DR",
       "zones": {
-        "raw": { "path": "bankdemo/raw/", "encryption": "SSE-KMS", "versioning": true },
-        "clean": { "path": "bankdemo/clean/", "encryption": "SSE-KMS", "versioning": true },
-        "errors": { "path": "bankdemo/errors/", "encryption": "SSE-KMS", "versioning": true },
-        "output": { "path": "bankdemo/output/", "encryption": "SSE-KMS", "versioning": true },
-        "audit": { "path": "bankdemo/audit/", "encryption": "SSE-KMS", "object_lock": true, "object_lock_mode": "COMPLIANCE", "retention_years": 7 }
+        "raw":    {"path": "bankdemo/raw/",    "encryption": "SSE-KMS", "versioning": true},
+        "clean":  {"path": "bankdemo/clean/",  "encryption": "SSE-KMS", "versioning": true},
+        "errors": {"path": "bankdemo/errors/", "encryption": "SSE-KMS", "versioning": true},
+        "output": {"path": "bankdemo/output/", "encryption": "SSE-KMS", "versioning": true},
+        "audit":  {"path": "bankdemo/audit/",  "encryption": "SSE-KMS", "object_lock": true, "object_lock_mode": "COMPLIANCE", "retention_years": 7}
       }
     },
     {
@@ -271,8 +413,6 @@
       "layer": "data",
       "risk_resolved": "SQL Server on-premises sin cifrado, sin HA, con credenciales hardcodeadas",
       "regulatory_coverage": ["PCI-DSS Req. 3", "PCI-DSS Req. 6", "SOX — Disponibilidad de sistemas financieros"],
-      "security_improvement": "Cifrado en reposo (KMS CMK); TLS obligatorio; autenticación IAM",
-      "compliance_improvement": "Automated backups con retención configurable; audit logging nativo",
       "configuration": {
         "engine": "aurora-postgresql",
         "instance_class": "db.r6g.large",
@@ -293,13 +433,11 @@
       "layer": "identity_and_access",
       "risk_resolved": "Acceso sin autenticación al sistema de pagos; sin segregación de roles",
       "regulatory_coverage": ["PCI-DSS Req. 7", "PCI-DSS Req. 8", "SOX — Segregación de funciones"],
-      "security_improvement": "Roles por servicio; MFA obligatorio; permission boundaries; Access Analyzer",
-      "compliance_improvement": "SCPs via Control Tower; auditoría de accesos en CloudTrail",
       "roles": {
-        "payments-app-role": ["Aurora read/write", "S3 raw write", "Secrets Manager read"],
-        "dq-engine-role": ["S3 raw read", "S3 clean+errors write", "S3 output write"],
+        "payments-app-role":      ["Aurora read/write", "S3 raw write", "Secrets Manager read"],
+        "dq-engine-role":         ["S3 raw read", "S3 clean+errors write", "S3 output write"],
         "compliance-engine-role": ["S3 clean+errors+output read", "S3 output/compliance write"],
-        "audit-read-role": ["S3 output read", "Athena query", "CloudTrail read"],
+        "audit-read-role":        ["S3 output read", "Athena query", "CloudTrail read"],
         "admin-break-glass-role": ["Full access — MFA + dual approval required"]
       }
     }
@@ -360,17 +498,17 @@
   ],
   "estimated_monthly_cost_usd": {
     "aurora_postgresql_multi_az": 350,
-    "amazon_s3": 25,
+    "amazon_eks": 140,
     "aws_glue": 130,
-    "amazon_athena": 12,
-    "aws_kms": 8,
-    "aws_cloudtrail": 15,
     "aws_config": 45,
     "aws_security_hub": 30,
     "aws_audit_manager": 20,
+    "aws_cloudtrail": 15,
+    "amazon_athena": 12,
+    "aws_kms": 8,
     "amazon_macie": 5,
+    "amazon_s3": 25,
     "aws_secrets_manager": 3,
-    "amazon_eks": 140,
     "total_estimated": 783
   }
 }

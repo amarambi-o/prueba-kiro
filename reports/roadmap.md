@@ -1,358 +1,476 @@
-# Roadmap de Modernización — payments-core
-## Bank Modernization Readiness Advisor | Kiro + AWS | Marzo 2026
-
-| | |
-|---|---|
-| Sistema | payments-core / BankDemo |
-| Duración total | 24 semanas (6 meses) |
-| Metodología | AWS Cloud Adoption Framework (CAF) |
-| Frameworks | PCI-DSS v4.0 · SOX · GDPR · Basel III |
-| Clasificación | Confidencial — Uso Técnico y Ejecutivo |
+# Roadmap de Modernización — Sistema Bancario Legacy a AWS
+**Sistema:** payments-core / BankDemo  
+**Versión:** 2.0 | **Fecha:** 2026-03-20  
+**Clasificación:** Confidencial — Uso Ejecutivo  
+**Duración total estimada:** 24 semanas (6 meses)  
+**Inversión estimada:** USD 566,000  
+**ROI proyectado a 3 años:** 59%
 
 ---
 
-## Visión General del Programa
+## Resumen Ejecutivo
 
-El programa de modernización se estructura en cuatro fases secuenciales diseñadas para reducir el riesgo regulatorio de forma progresiva, garantizando que cada fase entrega valor medible antes de iniciar la siguiente.
+El presente roadmap define el plan de modernización para migrar el sistema de pagos BankDemo desde una infraestructura on-premises basada en SQL Server hacia una arquitectura cloud-native en AWS, alineada con los requisitos regulatorios de PCI-DSS v4.0, SOX, GDPR y Basel III.
+
+El plan está estructurado en cinco fases secuenciales con dependencias explícitas, criterios de entrada y salida definidos, y entregables verificables por fase. Cada fase ha sido diseñada para minimizar el riesgo operacional y garantizar la continuidad del negocio durante la transición.
+
+El diagnóstico inicial del sistema revela un Cloud Readiness Score de 38/100, con hallazgos críticos que incluyen PII en texto plano, ausencia de audit trail, credenciales hardcodeadas y sin cifrado en reposo. La arquitectura objetivo alcanza un score proyectado de 85/100 al completar las cinco fases.
+
+---
+
+## Estado Actual del Sistema
+
+| Dimensión | Score Actual | Score Objetivo | Brecha |
+|---|---|---|---|
+| Cloud Readiness | 38/100 | 85/100 | −47 pts |
+| Data Quality | 76/100 | 92/100 | −16 pts |
+| Security Risk | 78/100 (alto) | 25/100 (bajo) | −53 pts |
+| Compliance Risk | 74/100 (alto) | 20/100 (bajo) | −54 pts |
+| PCI Readiness | 56/100 | 90/100 | −34 pts |
+| Encryption Coverage | 35/100 | 98/100 | −63 pts |
+
+**Hallazgos críticos que motivan la modernización:**
+- PII almacenado en texto plano (`customer_name`, `customer_email`)
+- Sin capa de autenticación en el sistema de pagos
+- Credenciales de base de datos hardcodeadas en código fuente
+- Sin audit trail equivalente a CloudTrail (130 findings de compliance)
+- Sin linaje de datos — hallazgo SOX/Basel III
+- SQL Server on-premises sin alta disponibilidad ni disaster recovery
+- Sin cifrado en reposo ni en tránsito
+
+---
+
+## Visión General del Roadmap
 
 ```
-Semana:  1    2    3    4    5    6    7    8    9   10   11   12
-         ├────────────────────────┤
-FASE 1   │  Fundamentos Seguridad │
-         └────────────────────────┘
-                                   ├────────────────────────┤
-FASE 2                             │  Gobernanza y Control  │
-                                   └────────────────────────┘
-
-Semana: 13   14   15   16   17   18   19   20   21   22   23   24
-         ├────────────────────────┤
-FASE 3   │  Migración Datos + App │
-         └────────────────────────┘
-                                   ├────────────────────────┤
-FASE 4                             │  Operaciones + Optim.  │
-                                   └────────────────────────┘
+Semanas  1-4   │ FASE 1 — Assessment y Fundamentos de Seguridad
+Semanas  5-8   │ FASE 2 — Landing Zone y Gobernanza
+Semanas  9-14  │ FASE 3 — Data Lake y Migración de Datos
+Semanas 15-20  │ FASE 4 — Modernización de Aplicaciones
+Semanas 21-24  │ FASE 5 — Optimización y Compliance
 ```
 
 ---
 
-## Fase 1 — Fundamentos de Seguridad
-### Semanas 1–6 | Prioridad: CRÍTICA
+## Fase 1 — Assessment y Fundamentos de Seguridad
+**Duración:** Semanas 1–4 (4 semanas)  
+**Prioridad:** CRÍTICA  
+**Equipo:** Cloud Architect (1), Security Engineer (1), DBA (1)
 
-**Objetivo:** Eliminar la exposición regulatoria inmediata identificada en el compliance assessment. Esta fase no requiere migración de infraestructura — opera sobre el entorno existente y los buckets S3 actuales.
+### Objetivo
+Establecer los fundamentos de seguridad no negociables antes de cualquier migración de datos. Esta fase cierra los hallazgos críticos de seguridad identificados en el assessment inicial y prepara el entorno AWS para recibir cargas de trabajo bancarias.
 
-**Criterio de éxito:** Al finalizar la Fase 1, el sistema debe poder superar una revisión preliminar PCI-DSS sin hallazgos críticos en Req. 3, 8 y 10.
+### Actividades por Semana
 
-### Semana 1 — Audit Trail y Cifrado Base
+**Semana 1 — Baseline y CloudTrail**
+- Ejecutar pipeline de assessment completo (extractor → DQ → compliance → advisor)
+- Documentar inventario de datos PII en sistema legacy
+- Habilitar CloudTrail multi-región con log file validation
+- Crear bucket `log-archive` con Object Lock COMPLIANCE (retención 7 años)
+- Cifrar bucket con KMS CMK `cloudtrail-cmk`
 
-| Tarea | Servicio AWS | Responsable | Entregable |
+**Semana 2 — Cifrado y Credenciales**
+- Crear 4 CMKs dedicadas: `payments-data-cmk`, `audit-logs-cmk`, `secrets-cmk`, `glue-catalog-cmk`
+- Habilitar rotación automática anual en todas las CMKs
+- Migrar credenciales hardcodeadas a AWS Secrets Manager
+- Cifrar buckets S3 existentes con SSE-KMS
+- Aplicar bucket policies: deny HTTP, block public access
+
+**Semana 3 — Security Hub y Config**
+- Habilitar AWS Security Hub en cuenta de seguridad
+- Activar estándares: PCI-DSS v3.2.1, CIS AWS Foundations v1.4, AWS FSBP
+- Configurar AWS Config con 9 reglas críticas
+- Habilitar remediación automática para reglas de alta severidad
+- Configurar VPC Flow Logs
+
+**Semana 4 — IAM y Revisión**
+- Implementar roles IAM de mínimo privilegio (5 roles del sistema)
+- Habilitar MFA obligatorio para todos los usuarios IAM
+- Habilitar IAM Access Analyzer
+- Revisar y cerrar findings de Security Hub (objetivo: score > 60%)
+- Documentar baseline de seguridad post-fase 1
+
+### Riesgos
+
+| Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| Habilitar CloudTrail multi-región con log file validation | CloudTrail | Cloud Director | Trail activo en todas las regiones |
-| Configurar S3 bucket para logs con Object Lock (WORM) | S3 + Object Lock | Cloud Director | Bucket `log-archive` con retención 7 años |
-| Cifrar bucket `bankdemo` con KMS CMK | KMS + S3 | Cloud Director | SSE-KMS activo en todas las zonas |
-| Crear CMK `payments-data-cmk` con rotación anual | KMS | Arquitectura | CMK documentada y con política de uso |
+| Interrupción de operaciones al migrar credenciales | Media | Alto | Migración en ventana de mantenimiento; rollback plan documentado |
+| Resistencia del equipo de operaciones al cambio | Alta | Medio | Sesiones de capacitación; documentación clara de nuevos procesos |
+| Hallazgos adicionales no identificados en assessment | Media | Medio | Buffer de 20% en estimación de tiempo por fase |
+| Incompatibilidad de aplicaciones con nuevas políticas IAM | Baja | Alto | Testing en entorno dev antes de aplicar en prod |
 
-**Impacto regulatorio:** Resuelve SOX Sec. 404 (audit trail) y PCI-DSS Req. 3 (cifrado) en < 48 horas.
+### Entregables
+- [ ] Informe de assessment con scores calibrados (DQ, Security, Compliance, Cloud Readiness)
+- [ ] CloudTrail activo multi-región con Object Lock
+- [ ] 4 CMKs creadas con rotación automática
+- [ ] Credenciales migradas a Secrets Manager (0 credenciales hardcodeadas)
+- [ ] Security Hub activo con score PCI-DSS > 60%
+- [ ] 9 reglas AWS Config activas
+- [ ] Roles IAM de mínimo privilegio implementados
+- [ ] Documento: Baseline de Seguridad Fase 1
 
-### Semana 2–3 — Gestión de Secretos
+### Servicios AWS Involucrados
+`AWS CloudTrail` · `AWS KMS` · `AWS Secrets Manager` · `AWS Security Hub` · `AWS Config` · `AWS IAM` · `Amazon S3` · `Amazon CloudWatch`
 
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Crear secretos en Secrets Manager para credenciales DB | Secrets Manager | Arquitectura | Secretos `bankdemo/db-credentials` |
-| Refactorizar `extractor.py` para usar Secrets Manager | Secrets Manager SDK | Desarrollo | Código sin credenciales hardcodeadas |
-| Configurar rotación automática de credenciales | Secrets Manager + Lambda | Cloud Director | Rotación cada 30 días |
-| Auditar código fuente — eliminar todas las credenciales | — | Desarrollo | Reporte de limpieza de código |
-
-**Impacto regulatorio:** Resuelve PCI-DSS Req. 8 (gestión de credenciales).
-
-### Semana 3–4 — Postura de Seguridad
-
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Habilitar Security Hub en cuenta principal | Security Hub | Cloud Director | Dashboard de postura activo |
-| Activar estándar PCI-DSS v3.2.1 en Security Hub | Security Hub | Cloud Director | Baseline de compliance visible |
-| Activar estándar CIS AWS Foundations Benchmark | Security Hub | Cloud Director | Reglas CIS activas |
-| Revisar y remediar findings críticos iniciales | Security Hub | Arquitectura | < 5 findings críticos abiertos |
-
-### Semana 4–5 — Compliance Continuo
-
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Habilitar AWS Config con recorder activo | AWS Config | Cloud Director | Historial de configuración iniciado |
-| Configurar reglas managed críticas | AWS Config | Arquitectura | 9 reglas activas (ver lista) |
-| Configurar remediación automática para S3 sin cifrado | Config + SSM | Arquitectura | Auto-remediation activa |
-| Configurar alertas CloudWatch para eventos críticos | CloudWatch | Cloud Director | Alertas a equipo de seguridad |
-
-**Reglas AWS Config críticas para Fase 1:**
-```
-rds-storage-encrypted
-s3-bucket-server-side-encryption-enabled
-s3-bucket-ssl-requests-only
-cloudtrail-enabled
-iam-root-access-key-check
-iam-no-inline-policy
-restricted-ssh
-vpc-flow-logs-enabled
-kms-cmk-not-scheduled-for-deletion
-```
-
-### Semana 5–6 — Remediación de Calidad de Datos
-
-| Tarea | Herramienta | Responsable | Entregable |
-|---|---|---|---|
-| Ejecutar DQ Engine sobre datos actuales | DQ Engine (Python) | Datos | Baseline DQ Score documentado |
-| Remediar registros con amount nulo/negativo | SQL + DQ Engine | Datos | Reducción de errores críticos |
-| Remediar registros con payment_id nulo | SQL + DQ Engine | Datos | 0 registros sin payment_id |
-| Re-ejecutar pipeline completo y validar DQ Score | run_pipeline.py | Datos | DQ Score objetivo: 85+ |
-
-**Entregables de Fase 1:**
-- CloudTrail activo con retención WORM 7 años
-- Todos los buckets S3 cifrados con KMS CMK
-- Credenciales migradas a Secrets Manager
-- Security Hub con estándar PCI-DSS activo
-- AWS Config con 9 reglas críticas activas
-- DQ Score mejorado a 85+/100
+### Criterio de Salida
+Security Risk Score < 60/100 (desde 78/100). CloudTrail activo. 0 credenciales hardcodeadas. Security Hub score PCI-DSS > 60%.
 
 ---
 
-## Fase 2 — Gobernanza y Control
-### Semanas 7–12 | Prioridad: ALTA
+## Fase 2 — Landing Zone y Gobernanza
+**Duración:** Semanas 5–8 (4 semanas)  
+**Prioridad:** ALTA  
+**Equipo:** Cloud Architect (1), Security Engineer (1), Compliance Officer (1)
 
-**Objetivo:** Establecer el framework de gobernanza multi-cuenta y los controles de compliance continuos que soportarán la migración de datos en Fase 3.
+### Objetivo
+Establecer la estructura de gobernanza multi-cuenta con AWS Control Tower, implementar los controles de auditoría continua con Audit Manager, y configurar la gobernanza de datos con Lake Formation. Esta fase garantiza que el entorno AWS cumpla con los requisitos de segregación de entornos exigidos por PCI-DSS y SOX.
 
-**Criterio de éxito:** Al finalizar la Fase 2, el entorno AWS debe tener estructura multi-cuenta con Control Tower, evidencia automática de controles para PCI-DSS y SOX, y linaje de datos establecido.
+### Actividades por Semana
 
-### Semana 7–8 — Control Tower Landing Zone
+**Semana 5 — Control Tower Landing Zone**
+- Desplegar Control Tower Landing Zone en cuenta de management
+- Crear estructura de 5 cuentas: management, security, log-archive, payments-prod, payments-dev
+- Configurar SCPs críticos: bloqueo S3 público, CloudTrail obligatorio, prohibición root
+- Migrar recursos existentes a cuenta payments-prod
+- Verificar guardrails activos en todas las cuentas
 
-| Tarea | Servicio AWS | Responsable | Entregable |
+**Semana 6 — Audit Manager**
+- Configurar AWS Audit Manager en cuenta de seguridad
+- Crear assessment PCI-DSS apuntando a cuenta payments-prod
+- Crear assessment SOX con controles de segregación y linaje
+- Configurar destino de evidencia: `s3://log-archive/audit-manager/` con Object Lock
+- Revisar primeros findings de Audit Manager
+
+**Semana 7 — Macie y Detección de PII**
+- Habilitar Amazon Macie en cuenta payments-prod
+- Configurar classification job diario en bucket `bankdemo`
+- Definir managed data identifiers: CREDIT_CARD_NUMBER, EMAIL_ADDRESS, NAME, BANK_ACCOUNT_NUMBER
+- Configurar EventBridge rule: Macie findings → SNS → compliance-team
+- Documentar inventario de PII detectado por Macie
+
+**Semana 8 — Lake Formation y Glue Catalog**
+- Configurar AWS Lake Formation como gestor de permisos del data lake
+- Crear roles y permisos: analyst-role, compliance-role, audit-role
+- Implementar column-level security: `customer_name`, `customer_email` inaccesibles para analyst-role
+- Configurar Glue Data Catalog con base de datos `bankdemo_db`
+- Crear crawlers: payments-raw, payments-clean, payments-errors
+- Verificar linaje de datos en Glue
+
+### Riesgos
+
+| Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| Diseñar estructura de cuentas AWS | Control Tower | Arquitectura | Diagrama de cuentas aprobado |
-| Desplegar Control Tower Landing Zone | Control Tower | Cloud Director | Landing Zone activa |
-| Crear cuentas: `security`, `log-archive`, `payments-prod`, `payments-dev` | Control Tower | Cloud Director | 4 cuentas creadas y configuradas |
-| Aplicar guardrails preventivos bancarios | Control Tower SCPs | Arquitectura | SCPs activos en todas las cuentas |
+| Complejidad de migración a estructura multi-cuenta | Alta | Alto | Planificación detallada de dependencias; migración incremental |
+| Findings de Macie que requieren remediación urgente | Alta | Alto | Plan de remediación de PII pre-acordado con equipo legal |
+| Disrupciones en acceso de usuarios durante Lake Formation | Media | Medio | Testing exhaustivo en cuenta dev antes de aplicar en prod |
+| Retrasos en aprobación de estructura de cuentas | Media | Medio | Involucrar a CIO/CISO desde semana 1 para aprobaciones |
 
-**Guardrails críticos para banca:**
-```
-Disallow public S3 buckets
-Require CloudTrail in all regions
-Disallow root account usage
-Require MFA for IAM users
-Disallow creation of access keys for root
-Require encryption for EBS volumes
-```
+### Entregables
+- [ ] Control Tower Landing Zone activo con 5 cuentas
+- [ ] SCPs críticos activos y verificados
+- [ ] Audit Manager: assessments PCI-DSS y SOX activos
+- [ ] Macie: classification job diario activo, inventario de PII documentado
+- [ ] Lake Formation: column-level security implementado
+- [ ] Glue Data Catalog: 4 tablas catalogadas con linaje
+- [ ] Documento: Informe de Gobernanza Fase 2
 
-### Semana 8–9 — Audit Manager
+### Servicios AWS Involucrados
+`AWS Control Tower` · `AWS Audit Manager` · `Amazon Macie` · `AWS Lake Formation` · `AWS Glue` · `Amazon EventBridge` · `Amazon SNS`
 
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Configurar Audit Manager con framework PCI-DSS | Audit Manager | Head of Risk | Assessment PCI-DSS activo |
-| Configurar Audit Manager con framework SOX | Audit Manager | Head of Risk | Assessment SOX activo |
-| Mapear controles a recursos AWS existentes | Audit Manager | Arquitectura | Mapa de controles documentado |
-| Configurar almacenamiento de evidencia (7 años) | Audit Manager + S3 | Cloud Director | Bucket `audit-evidence` con retención |
-
-### Semana 9 — Amazon Macie
-
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Habilitar Macie en bucket `bankdemo` | Macie | Cloud Director | Macie activo |
-| Configurar jobs de clasificación diarios | Macie | Cloud Director | Jobs programados |
-| Configurar findings → EventBridge → SNS | Macie + EventBridge | Arquitectura | Alertas a equipo de compliance |
-| Revisar inventario inicial de PII detectado | Macie | Head of Risk | Reporte de PII en S3 |
-
-### Semana 10–11 — Lake Formation RBAC
-
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Configurar Lake Formation como administrador de datos | Lake Formation | Arquitectura | Lake Formation activo |
-| Definir permisos por rol (analyst, compliance, audit) | Lake Formation | Arquitectura | Matriz de permisos documentada |
-| Aplicar column-level security en `customer_email` | Lake Formation | Arquitectura | PII enmascarado para rol analyst |
-| Validar acceso con cada rol | Lake Formation | Arquitectura | Pruebas de acceso documentadas |
-
-**Matriz de roles Lake Formation:**
-```
-analyst-role       → payments_clean (sin customer_name, customer_email)
-compliance-role    → payments_clean + payments_errors (customer_email enmascarado)
-audit-role         → TODAS las tablas (acceso completo — logueado en CloudTrail)
-```
-
-### Semana 11–12 — Glue Catalog y Linaje
-
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Configurar Glue Data Catalog para `bankdemo_db` | Glue | Datos | Catálogo con tablas documentadas |
-| Crear crawlers para zonas raw, clean, errors | Glue | Datos | 3 crawlers activos |
-| Configurar jobs ETL con linaje documentado | Glue | Datos | Linaje visual en Glue Studio |
-| Integrar Glue Catalog con Lake Formation | Glue + Lake Formation | Arquitectura | RBAC aplicado sobre catálogo |
-
-**Entregables de Fase 2:**
-- Control Tower Landing Zone con 4 cuentas
-- Audit Manager activo para PCI-DSS y SOX
-- Macie clasificando PII diariamente
-- Lake Formation con RBAC columnar
-- Glue Catalog con linaje de datos establecido
+### Criterio de Salida
+Control Tower activo con 5 cuentas. Audit Manager con 2 assessments activos. Macie detectando PII. Lake Formation con column-level security. Compliance Risk Score < 55/100 (desde 74/100).
 
 ---
 
-## Fase 3 — Migración de Datos y Aplicación
-### Semanas 13–18 | Prioridad: ALTA
+## Fase 3 — Data Lake y Migración de Datos
+**Duración:** Semanas 9–14 (6 semanas)  
+**Prioridad:** ALTA  
+**Equipo:** Data Engineer (2), DBA (1), Cloud Architect (1), QA Engineer (1)
 
-**Objetivo:** Migrar el workload `payments-core` a AWS cloud-native, reemplazando SQL Server on-premises por Aurora PostgreSQL Multi-AZ y desplegando la aplicación en Amazon EKS.
+### Objetivo
+Migrar los datos del sistema legacy (SQL Server on-premises) a la arquitectura de data lake en AWS, validar la calidad de datos post-migración, y establecer Aurora PostgreSQL como base de datos transaccional de producción. Esta fase es el núcleo técnico de la modernización.
 
-**Criterio de éxito:** Al finalizar la Fase 3, el sistema debe operar completamente en AWS con DQ Score ≥ 88 y compliance assessment sin hallazgos críticos.
+### Actividades por Semana
 
-### Semana 13–14 — Aurora PostgreSQL
+**Semana 9 — Infraestructura de Datos**
+- Provisionar Aurora PostgreSQL Multi-AZ en cuenta payments-prod
+- Configurar: cifrado KMS, IAM auth, deletion protection, backup 35 días
+- Crear VPC con subnets privadas (app y data) en us-east-2a y us-east-2b
+- Configurar VPC Endpoints para S3, KMS, Secrets Manager, Athena, Glue
+- Configurar Security Groups restrictivos (app-sg → data-sg solo puerto 5432)
 
-| Tarea | Servicio AWS | Responsable | Entregable |
+**Semana 10 — Migración Inicial con AWS DMS**
+- Configurar AWS DMS replication instance
+- Crear endpoints: SQL Server (source) → Aurora PostgreSQL (target)
+- Ejecutar full load de tabla `payments_raw` (700+ registros iniciales)
+- Validar integridad referencial post-migración
+- Configurar ongoing replication (CDC) para período de coexistencia
+
+**Semana 11 — Validación de Calidad de Datos**
+- Ejecutar DQ Engine completo sobre datos migrados en Aurora
+- Objetivo: DQ Score ≥ 90/100 (desde 76/100 en legacy)
+- Documentar y remediar errores de calidad encontrados
+- Ejecutar compliance assessment sobre datos en Aurora
+- Comparar findings: legacy vs Aurora (objetivo: reducción > 40%)
+
+**Semana 12 — Pipeline ETL en AWS Glue**
+- Migrar lógica de DQ Engine a AWS Glue jobs
+- Crear job `raw-to-clean-etl`: validación de 15 reglas de calidad
+- Crear job `compliance-enrichment-job`: enriquecimiento con scores regulatorios
+- Configurar triggers: S3 event → Glue job → Athena refresh
+- Validar linaje completo en Glue Data Catalog
+
+**Semana 13 — Athena y Consultas de Auditoría**
+- Configurar workgroup `audit` en Athena con output cifrado con KMS
+- Crear 4 named queries de auditoría (transacciones alto valor, errores DQ, findings compliance, accesos PII)
+- Validar acceso por roles: analyst-role, compliance-role, audit-role
+- Ejecutar prueba de auditoría simulada con equipo de compliance
+- Documentar tiempo de respuesta a requerimientos de auditoría (objetivo: < 2 horas)
+
+**Semana 14 — Cutover y Validación Final**
+- Ejecutar cutover de SQL Server a Aurora (ventana de mantenimiento)
+- Validar pipeline completo end-to-end en producción
+- Ejecutar smoke tests: extracción, DQ, Athena, compliance, advisor
+- Monitorear métricas de Aurora: latencia, conexiones, CPU, storage
+- Documentar runbook de operaciones post-migración
+
+### Riesgos
+
+| Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| Provisionar Aurora PostgreSQL Multi-AZ en `us-east-2` | Aurora | Cloud Director | Cluster activo |
-| Configurar cifrado con `payments-data-cmk` | Aurora + KMS | Cloud Director | Cifrado en reposo activo |
-| Habilitar IAM database authentication | Aurora + IAM | Arquitectura | Sin passwords — solo IAM |
-| Configurar automated backups (35 días retención) | Aurora | Cloud Director | Backup policy activa |
-| Configurar Performance Insights + Enhanced Monitoring | Aurora | Cloud Director | Monitoreo activo |
+| Pérdida de datos durante migración DMS | Baja | Crítico | Backup completo pre-migración; validación de checksums; rollback a SQL Server |
+| DQ Score post-migración < 90/100 | Media | Alto | Semana 11 dedicada exclusivamente a remediación de calidad |
+| Latencia de Aurora superior a SQL Server legacy | Baja | Medio | Benchmark pre-cutover; ajuste de instance class si necesario |
+| Dependencias no documentadas en SQL Server | Media | Alto | Análisis de dependencias en semana 9 antes de migración |
+| Tiempo de cutover excede ventana de mantenimiento | Media | Alto | Dry run de cutover en entorno dev en semana 13 |
 
-### Semana 14–16 — Migración de Datos con DMS
+### Entregables
+- [ ] Aurora PostgreSQL Multi-AZ activo con cifrado KMS
+- [ ] VPC con subnets privadas y VPC Endpoints configurados
+- [ ] Migración completa de payments_raw a Aurora (validada con checksums)
+- [ ] DQ Score post-migración ≥ 90/100
+- [ ] Glue jobs: raw-to-clean-etl y compliance-enrichment-job activos
+- [ ] Athena workgroup audit con 4 named queries
+- [ ] Runbook de operaciones post-migración
+- [ ] Documento: Informe de Migración de Datos Fase 3
 
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Configurar AWS DMS — source: SQL Server, target: Aurora | AWS DMS | Datos | Tarea de migración configurada |
-| Ejecutar migración full-load de `payments_raw` | AWS DMS | Datos | Datos migrados a Aurora |
-| Validar integridad post-migración (row count, checksums) | DMS + SQL | Datos | Reporte de validación |
-| Ejecutar DQ Engine sobre datos en Aurora | DQ Engine | Datos | DQ Score post-migración |
-| Ejecutar Compliance Engine sobre datos en Aurora | Compliance Engine | Datos | Compliance assessment post-migración |
+### Servicios AWS Involucrados
+`Amazon Aurora PostgreSQL` · `AWS DMS` · `Amazon VPC` · `AWS Glue` · `Amazon Athena` · `Amazon S3` · `AWS KMS` · `AWS Lake Formation`
 
-### Semana 15–17 — Despliegue en Amazon EKS
-
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Provisionar cluster EKS en VPC privada | EKS | Cloud Director | Cluster activo |
-| Containerizar `payments-core` (Dockerfile) | ECR | Desarrollo | Imagen en ECR |
-| Desplegar `dq-engine` y `compliance-engine` como pods | EKS | Desarrollo | Pods corriendo |
-| Configurar ALB Ingress Controller | EKS + ALB | Arquitectura | Endpoints expuestos |
-| Configurar AWS WAF en ALB | WAF | Cloud Director | Reglas OWASP activas |
-
-### Semana 16–17 — Autenticación con Cognito + IAM
-
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Configurar Amazon Cognito User Pool | Cognito | Arquitectura | User Pool activo |
-| Integrar Cognito con payments-core API | Cognito + API | Desarrollo | Autenticación JWT activa |
-| Crear roles IAM por servicio (least-privilege) | IAM | Arquitectura | 5 roles documentados |
-| Configurar permission boundaries | IAM | Arquitectura | Boundaries activos |
-| Habilitar IAM Access Analyzer | IAM | Cloud Director | Análisis de accesos excesivos |
-
-### Semana 17–18 — Validación Regulatoria
-
-| Tarea | Herramienta | Responsable | Entregable |
-|---|---|---|---|
-| Ejecutar pipeline completo en AWS | run_pipeline.py | Datos | Pipeline end-to-end validado |
-| Ejecutar compliance assessment completo | Compliance Engine | Head of Risk | Reporte de compliance post-migración |
-| Comparar scores antes/después de migración | — | Head of Risk | Reporte de mejora de scores |
-| Revisión de seguridad pre-producción | Security Hub | Cloud Director | 0 findings críticos abiertos |
-
-**Entregables de Fase 3:**
-- Aurora PostgreSQL Multi-AZ activo con cifrado KMS
-- payments-core corriendo en Amazon EKS
-- Autenticación Cognito + IAM implementada
-- DQ Score ≥ 88/100 post-migración
-- Compliance assessment sin hallazgos críticos
+### Criterio de Salida
+Aurora activo Multi-AZ. DQ Score ≥ 90/100. Pipeline ETL Glue funcionando. Athena con consultas de auditoría validadas. Cloud Readiness Score > 65/100.
 
 ---
 
-## Fase 4 — Operaciones y Optimización
-### Semanas 19–24 | Prioridad: MEDIA
+## Fase 4 — Modernización de Aplicaciones
+**Duración:** Semanas 15–20 (6 semanas)  
+**Prioridad:** ALTA  
+**Equipo:** Backend Developer (2), DevOps Engineer (1), Security Engineer (1), Cloud Architect (1)
 
-**Objetivo:** Automatizar operaciones, implementar detección de amenazas, completar la certificación PCI-DSS y documentar la arquitectura final para SOX.
+### Objetivo
+Containerizar y desplegar el sistema de pagos en Amazon EKS, implementar el perímetro de seguridad de aplicación (WAF + ALB), y eliminar todas las dependencias del sistema legacy on-premises. Al finalizar esta fase, el sistema de pagos opera completamente en AWS sin dependencias externas.
 
-### Semana 19–20 — QuickSight Dashboards
+### Actividades por Semana
 
-| Tarea | Servicio AWS | Responsable | Entregable |
+**Semana 15 — Containerización**
+- Containerizar payments-core en imagen Docker
+- Eliminar credenciales hardcodeadas del código (reemplazar con Secrets Manager SDK)
+- Implementar health checks y graceful shutdown
+- Crear repositorio en Amazon ECR con escaneo de vulnerabilidades
+- Configurar pipeline CI/CD básico (CodePipeline + CodeBuild)
+
+**Semana 16 — Amazon EKS**
+- Provisionar cluster EKS en subnets privadas (us-east-2a, us-east-2b)
+- Configurar node groups Multi-AZ con auto-scaling
+- Implementar IRSA (IAM Roles for Service Accounts) para payments-core
+- Desplegar payments-core en EKS con 2 réplicas mínimas
+- Configurar Horizontal Pod Autoscaler (HPA)
+
+**Semana 17 — Perímetro de Seguridad**
+- Desplegar Application Load Balancer con TLS 1.3 obligatorio
+- Configurar AWS WAF con reglas OWASP Top 10
+- Implementar rate limiting: 1000 req/min por IP
+- Configurar AWS WAF logging a S3 con cifrado KMS
+- Validar que todo el tráfico pasa por WAF antes de llegar a EKS
+
+**Semana 18 — Observabilidad**
+- Configurar CloudWatch Container Insights para EKS
+- Crear dashboards de métricas: latencia, error rate, throughput
+- Configurar alarmas: CPU > 80%, error rate > 1%, latencia p99 > 500ms
+- Habilitar Amazon GuardDuty para detección de amenazas
+- Configurar EventBridge rules para alertas críticas → SNS → on-call team
+
+**Semana 19 — Testing de Seguridad**
+- Ejecutar penetration testing sobre endpoints de payments-core
+- Validar WAF bloqueando ataques OWASP Top 10
+- Ejecutar AWS Inspector sobre imágenes ECR
+- Revisar Security Hub findings post-despliegue EKS
+- Remediar findings críticos y altos
+
+**Semana 20 — Descomisión Legacy**
+- Validar que 100% del tráfico opera sobre EKS/Aurora
+- Ejecutar prueba de failover Aurora Multi-AZ
+- Documentar procedimiento de rollback de emergencia
+- Descomisionar SQL Server on-premises (o mantener en modo read-only 30 días)
+- Actualizar documentación de arquitectura
+
+### Riesgos
+
+| Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| Configurar QuickSight con fuente Athena | QuickSight | Datos | Dataset conectado |
-| Crear dashboard ejecutivo de DQ Score | QuickSight | Datos | Dashboard CIO/CTO |
-| Crear dashboard de compliance scores | QuickSight | Head of Risk | Dashboard Head of Risk |
-| Crear dashboard de costos AWS | QuickSight + Cost Explorer | Cloud Director | Dashboard Cloud Director |
-| Publicar dashboards a audiencia ejecutiva | QuickSight | Datos | Acceso configurado por rol |
+| Vulnerabilidades en imagen Docker de payments-core | Media | Alto | ECR image scanning + Inspector antes de despliegue en prod |
+| Incompatibilidad de aplicación con Aurora PostgreSQL | Media | Alto | Testing exhaustivo en semana 15-16 antes de cutover |
+| Performance degradado en EKS vs on-premises | Baja | Medio | Load testing pre-cutover; ajuste de recursos EKS |
+| Fallo en descomisión de SQL Server con dependencias ocultas | Media | Alto | Período de coexistencia 30 días; monitoreo de conexiones a SQL Server |
+| Configuración incorrecta de WAF bloqueando tráfico legítimo | Media | Alto | Testing en modo COUNT antes de activar modo BLOCK |
 
-### Semana 20–21 — Automatización de Remediación
+### Entregables
+- [ ] Imagen Docker de payments-core en ECR (sin vulnerabilidades críticas)
+- [ ] Cluster EKS Multi-AZ con payments-core desplegado
+- [ ] ALB + WAF activo con reglas OWASP Top 10
+- [ ] Pipeline CI/CD activo (CodePipeline + CodeBuild)
+- [ ] CloudWatch dashboards y alarmas configurados
+- [ ] GuardDuty activo
+- [ ] Prueba de failover Aurora documentada
+- [ ] Documento: Informe de Modernización de Aplicaciones Fase 4
 
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Configurar Config Rules con auto-remediation | Config + SSM | Arquitectura | Remediación automática activa |
-| Crear Lambda para remediar buckets sin cifrado | Lambda + Config | Desarrollo | Función activa |
-| Configurar EventBridge rules para alertas críticas | EventBridge + SNS | Arquitectura | Alertas a equipos correctos |
-| Implementar runbooks de respuesta a incidentes | Systems Manager | Cloud Director | Runbooks documentados |
+### Servicios AWS Involucrados
+`Amazon EKS` · `Amazon ECR` · `AWS WAF` · `Application Load Balancer` · `AWS CodePipeline` · `AWS CodeBuild` · `Amazon CloudWatch` · `Amazon GuardDuty` · `Amazon EventBridge`
 
-### Semana 21 — GuardDuty
-
-| Tarea | Servicio AWS | Responsable | Entregable |
-|---|---|---|---|
-| Habilitar GuardDuty en todas las cuentas | GuardDuty | Cloud Director | GuardDuty activo |
-| Configurar findings → Security Hub | GuardDuty + Security Hub | Cloud Director | Integración activa |
-| Configurar alertas para findings HIGH/CRITICAL | GuardDuty + SNS | Cloud Director | Alertas a SOC |
-| Revisar baseline de amenazas inicial | GuardDuty | Cloud Director | Reporte de amenazas baseline |
-
-### Semana 22–23 — Auditoría PCI-DSS (QSA)
-
-| Tarea | Responsable | Entregable |
-|---|---|---|
-| Contratar QSA (Qualified Security Assessor) | Head of Risk | QSA contratado |
-| Preparar evidencia de controles en Audit Manager | Head of Risk | Paquete de evidencia |
-| Ejecutar auditoría PCI-DSS formal | QSA + Head of Risk | Reporte de auditoría |
-| Remediar observaciones del QSA | Arquitectura | Observaciones cerradas |
-| Obtener certificación PCI-DSS | Head of Risk | Certificado PCI-DSS |
-
-### Semana 23–24 — Documentación SOX y Cierre
-
-| Tarea | Responsable | Entregable |
-|---|---|---|
-| Documentar arquitectura final para SOX Sec. 404 | Arquitectura | Documento de arquitectura |
-| Documentar controles internos implementados | Head of Risk | Matriz de controles SOX |
-| Ejecutar compliance assessment final | Compliance Engine | Scores finales documentados |
-| Presentación ejecutiva de resultados | CIO / CTO | Presentación de cierre |
-| Transición a operaciones regulares | Cloud Director | Runbook operativo |
-
-**Entregables de Fase 4:**
-- Dashboards ejecutivos en QuickSight
-- Remediación automática activa
-- GuardDuty con detección de amenazas
-- Certificación PCI-DSS obtenida
-- Documentación SOX completa
+### Criterio de Salida
+payments-core operando en EKS. WAF activo. 0 dependencias de SQL Server on-premises. Security Risk Score < 35/100. Cloud Readiness Score > 78/100.
 
 ---
 
-## Resumen de Hitos del Programa
+## Fase 5 — Optimización y Compliance
+**Duración:** Semanas 21–24 (4 semanas)  
+**Prioridad:** MEDIA  
+**Equipo:** Cloud Architect (1), Compliance Officer (1), FinOps Engineer (1), Data Analyst (1)
 
-| Hito | Semana | Criterio de éxito |
-|---|---|---|
-| M1 — Audit trail activo | 1 | CloudTrail multi-región con WORM |
-| M2 — Cifrado implementado | 2 | Todos los buckets S3 con SSE-KMS |
-| M3 — Credenciales seguras | 3 | 0 credenciales en código fuente |
-| M4 — Postura de seguridad visible | 4 | Security Hub con PCI-DSS activo |
-| M5 — Gobernanza multi-cuenta | 8 | Control Tower Landing Zone activa |
-| M6 — Evidencia regulatoria automática | 9 | Audit Manager PCI + SOX activo |
-| M7 — Linaje de datos establecido | 12 | Glue Catalog + Lake Formation activos |
-| M8 — Aurora en producción | 14 | Cluster Multi-AZ con cifrado KMS |
-| M9 — Migración completada | 16 | payments_raw en Aurora validado |
-| M10 — payments-core en EKS | 17 | Aplicación corriendo en AWS |
-| M11 — Compliance sin hallazgos críticos | 18 | 0 findings CRITICAL en compliance engine |
-| M12 — Certificación PCI-DSS | 23 | Certificado QSA obtenido |
-| M13 — Documentación SOX completa | 24 | Matriz de controles SOX aprobada |
+### Objetivo
+Completar la implementación de controles de compliance, optimizar costos operativos, implementar dashboards ejecutivos, y preparar la documentación para auditoría externa PCI-DSS y SOX. Al finalizar esta fase, el sistema está listo para ser auditado por un QSA (Qualified Security Assessor) de PCI-DSS.
+
+### Actividades por Semana
+
+**Semana 21 — QuickSight y Reportería Ejecutiva**
+- Configurar Amazon QuickSight con fuente de datos Athena
+- Crear dashboard ejecutivo: DQ Score, Security Score, Compliance Score, Cloud Readiness
+- Crear dashboard operacional: transacciones por hora, error rate, latencia
+- Crear dashboard de compliance: findings por severidad, tendencia semanal
+- Configurar distribución automática de reportes a CIO/CTO/CISO (semanal)
+
+**Semana 22 — Remediación Automática**
+- Implementar Lambda functions para remediación automática de Config rules
+- Automatizar: cifrado S3, bloqueo acceso público, habilitación CloudTrail
+- Configurar AWS Systems Manager Automation para remediación de EC2/EKS
+- Revisar y cerrar todos los findings de Audit Manager (PCI-DSS y SOX)
+- Objetivo: Audit Manager compliance score > 85%
+
+**Semana 23 — Prueba de Auditoría PCI-DSS**
+- Ejecutar self-assessment PCI-DSS SAQ D completo
+- Documentar evidencia para cada uno de los 12 requisitos PCI-DSS
+- Ejecutar vulnerability scan con AWS Inspector (requisito PCI-DSS Req. 11.3)
+- Revisar penetration test report y documentar remediaciones
+- Preparar paquete de evidencia para QSA externo
+
+**Semana 24 — Cierre y Documentación Final**
+- Ejecutar pipeline completo y documentar scores finales
+- Actualizar arquitectura objetivo con estado real post-implementación
+- Documentar runbooks operacionales: incident response, backup/restore, key rotation
+- Presentación ejecutiva final: CIO, CTO, Head of Risk, Cloud Director
+- Entregar paquete completo de documentación para auditoría
+
+### Riesgos
+
+| Riesgo | Probabilidad | Impacto | Mitigación |
+|---|---|---|---|
+| Findings de auditoría PCI-DSS que requieren remediación adicional | Media | Alto | Buffer de 2 semanas post-fase 5 para remediaciones de auditoría |
+| Costos AWS superiores a estimación | Media | Medio | FinOps review semanal desde semana 21; Reserved Instances para Aurora/EKS |
+| Documentación insuficiente para QSA | Baja | Alto | Audit Manager genera evidencia automática; revisión con compliance officer |
+| Resistencia a adopción de QuickSight por usuarios legacy | Media | Bajo | Capacitación y período de adopción gradual |
+
+### Entregables
+- [ ] QuickSight dashboards ejecutivos y operacionales activos
+- [ ] Remediación automática de Config rules implementada
+- [ ] Audit Manager: compliance score PCI-DSS > 85%, SOX > 85%
+- [ ] Self-assessment PCI-DSS SAQ D completado
+- [ ] Paquete de evidencia para QSA externo
+- [ ] Runbooks operacionales documentados
+- [ ] Presentación ejecutiva final
+- [ ] Documento: Informe de Cierre y Estado Final del Sistema
+
+### Servicios AWS Involucrados
+`Amazon QuickSight` · `AWS Audit Manager` · `AWS Config` · `AWS Lambda` · `AWS Systems Manager` · `AWS Inspector` · `Amazon CloudWatch` · `AWS Security Hub`
+
+### Criterio de Salida
+Cloud Readiness Score ≥ 85/100. Security Risk Score ≤ 25/100. Compliance Risk Score ≤ 20/100. Audit Manager PCI-DSS > 85%. Sistema listo para auditoría QSA externa.
+
+---
+
+## Resumen de Scores por Fase
+
+| Fase | Cloud Readiness | Security Risk | Compliance Risk | PCI Readiness |
+|---|---|---|---|---|
+| Baseline (actual) | 38/100 | 78/100 | 74/100 | 56/100 |
+| Post Fase 1 | 45/100 | 58/100 | 65/100 | 62/100 |
+| Post Fase 2 | 55/100 | 48/100 | 50/100 | 70/100 |
+| Post Fase 3 | 68/100 | 40/100 | 38/100 | 78/100 |
+| Post Fase 4 | 78/100 | 32/100 | 28/100 | 85/100 |
+| Post Fase 5 (objetivo) | 85/100 | 25/100 | 20/100 | 90/100 |
+
+---
+
+## Resumen de Inversión
+
+| Fase | Duración | Costo Consultoría | Costo AWS | Total |
+|---|---|---|---|---|
+| Fase 1 — Assessment | 4 semanas | $45,000 | $2,000 | $47,000 |
+| Fase 2 — Landing Zone | 4 semanas | $55,000 | $4,000 | $59,000 |
+| Fase 3 — Data Lake | 6 semanas | $95,000 | $12,000 | $107,000 |
+| Fase 4 — Modernización | 6 semanas | $120,000 | $18,000 | $138,000 |
+| Fase 5 — Optimización | 4 semanas | $60,000 | $8,000 | $68,000 |
+| Contingencia (15%) | — | — | — | $62,850 |
+| **Total** | **24 semanas** | **$375,000** | **$44,000** | **$481,850** |
+
+**Ahorro operativo anual estimado:** USD 285,000  
+**ROI a 3 años:** 59%  
+**Payback estimado:** 12 meses
+
+---
+
+## Dependencias entre Fases
+
+```
+Fase 1 (Seguridad) ──────────────────────────────────────────────────────┐
+    └─► Fase 2 (Landing Zone) ────────────────────────────────────────┐  │
+              └─► Fase 3 (Data Lake) ──────────────────────────────┐  │  │
+                        └─► Fase 4 (Aplicaciones) ──────────────┐  │  │  │
+                                    └─► Fase 5 (Compliance) ◄───┘  │  │  │
+                                                              ◄─────┘  │  │
+                                                              ◄─────────┘  │
+                                                              ◄────────────┘
+```
+
+Cada fase tiene prerequisitos estrictos. No se puede iniciar Fase 3 sin que Fase 2 haya completado la estructura de cuentas y Lake Formation. No se puede iniciar Fase 4 sin que Aurora esté activo y validado en Fase 3.
 
 ---
 
 ## Equipo Recomendado
 
-| Rol | Dedicación | Responsabilidad principal |
+| Rol | Fases | Dedicación |
 |---|---|---|
-| Cloud Architect (AWS) | 100% | Diseño y despliegue de arquitectura |
-| DevOps / Platform Engineer | 100% | EKS, CI/CD, automatización |
-| Data Engineer | 75% | DQ Engine, Glue, migración DMS |
-| Security Engineer | 50% | Security Hub, GuardDuty, IAM |
-| Compliance Analyst | 50% | Audit Manager, evidencia regulatoria |
-| Project Manager | 50% | Coordinación, hitos, reportes |
-| QSA (externo) | Semanas 22–23 | Auditoría PCI-DSS formal |
+| Cloud Architect (Lead) | 1–5 | 100% |
+| Security Engineer | 1–4 | 100% |
+| Data Engineer | 3–4 | 100% |
+| DBA / Migration Specialist | 1, 3 | 100% |
+| Backend Developer | 4 | 100% |
+| DevOps Engineer | 4–5 | 100% |
+| Compliance Officer | 2, 5 | 50% |
+| FinOps Engineer | 5 | 50% |
+| QA Engineer | 3–4 | 50% |
 
 ---
 
-*Preparado por Bank Modernization Readiness Advisor — Kiro + AWS*
-*Alineado con AWS Cloud Adoption Framework (CAF) y AWS Financial Services Reference Architecture*
-*Clasificación: Confidencial — Uso Técnico y Ejecutivo | Marzo 2026*
+*Documento generado por Bank Modernization Advisor — BankDemo Pipeline v2.0*  
+*Alineado con AWS Financial Services Reference Architecture*  
+*Frameworks: PCI-DSS v4.0 · SOX · GDPR · Basel III · NIST CSF*

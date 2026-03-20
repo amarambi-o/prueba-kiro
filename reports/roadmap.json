@@ -1,0 +1,690 @@
+{
+  "metadata": {
+    "title": "Roadmap de Modernización — Sistema Bancario Legacy a AWS",
+    "system": "payments-core / BankDemo",
+    "version": "2.0",
+    "generated_at": "2026-03-20",
+    "classification": "Confidential — Executive Use",
+    "total_duration_weeks": 24,
+    "total_investment_usd": 481850,
+    "annual_savings_usd": 285000,
+    "roi_3y_pct": 59,
+    "payback_months": 12,
+    "regulatory_frameworks": ["PCI-DSS v4.0", "SOX", "GDPR", "Basel III", "NIST CSF"]
+  },
+  "baseline_scores": {
+    "cloud_readiness": 38,
+    "data_quality": 76,
+    "security_risk": 78,
+    "compliance_risk": 74,
+    "pci_readiness": 56,
+    "encryption_coverage": 35,
+    "pii_exposure": 72,
+    "auditability": 87
+  },
+  "target_scores": {
+    "cloud_readiness": 85,
+    "data_quality": 92,
+    "security_risk": 25,
+    "compliance_risk": 20,
+    "pci_readiness": 90,
+    "encryption_coverage": 98,
+    "pii_exposure": 10,
+    "auditability": 98
+  },
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Assessment y Fundamentos de Seguridad",
+      "weeks": "1-4",
+      "duration_weeks": 4,
+      "priority": "CRITICAL",
+      "objective": "Establecer los fundamentos de seguridad no negociables antes de cualquier migración de datos. Cerrar hallazgos críticos de seguridad y preparar el entorno AWS para cargas de trabajo bancarias.",
+      "team": {
+        "cloud_architect": 1,
+        "security_engineer": 1,
+        "dba": 1
+      },
+      "activities": [
+        {
+          "week": 1,
+          "name": "Baseline y CloudTrail",
+          "tasks": [
+            "Ejecutar pipeline de assessment completo",
+            "Documentar inventario de datos PII en sistema legacy",
+            "Habilitar CloudTrail multi-región con log file validation",
+            "Crear bucket log-archive con Object Lock COMPLIANCE",
+            "Cifrar bucket con KMS CMK cloudtrail-cmk"
+          ]
+        },
+        {
+          "week": 2,
+          "name": "Cifrado y Credenciales",
+          "tasks": [
+            "Crear 4 CMKs dedicadas con rotación automática anual",
+            "Migrar credenciales hardcodeadas a AWS Secrets Manager",
+            "Cifrar buckets S3 existentes con SSE-KMS",
+            "Aplicar bucket policies: deny HTTP, block public access"
+          ]
+        },
+        {
+          "week": 3,
+          "name": "Security Hub y Config",
+          "tasks": [
+            "Habilitar AWS Security Hub con estándares PCI-DSS, CIS, FSBP",
+            "Configurar AWS Config con 9 reglas críticas",
+            "Habilitar remediación automática para reglas de alta severidad",
+            "Configurar VPC Flow Logs"
+          ]
+        },
+        {
+          "week": 4,
+          "name": "IAM y Revisión",
+          "tasks": [
+            "Implementar 5 roles IAM de mínimo privilegio",
+            "Habilitar MFA obligatorio para todos los usuarios IAM",
+            "Habilitar IAM Access Analyzer",
+            "Revisar y cerrar findings de Security Hub (objetivo: score > 60%)"
+          ]
+        }
+      ],
+      "risks": [
+        {
+          "risk": "Interrupción de operaciones al migrar credenciales",
+          "probability": "medium",
+          "impact": "high",
+          "mitigation": "Migración en ventana de mantenimiento; rollback plan documentado"
+        },
+        {
+          "risk": "Resistencia del equipo de operaciones al cambio",
+          "probability": "high",
+          "impact": "medium",
+          "mitigation": "Sesiones de capacitación; documentación clara de nuevos procesos"
+        },
+        {
+          "risk": "Hallazgos adicionales no identificados en assessment",
+          "probability": "medium",
+          "impact": "medium",
+          "mitigation": "Buffer de 20% en estimación de tiempo por fase"
+        }
+      ],
+      "deliverables": [
+        "Informe de assessment con scores calibrados",
+        "CloudTrail activo multi-región con Object Lock",
+        "4 CMKs creadas con rotación automática",
+        "Credenciales migradas a Secrets Manager (0 hardcodeadas)",
+        "Security Hub activo con score PCI-DSS > 60%",
+        "9 reglas AWS Config activas",
+        "Roles IAM de mínimo privilegio implementados",
+        "Documento: Baseline de Seguridad Fase 1"
+      ],
+      "aws_services": [
+        "AWS CloudTrail",
+        "AWS KMS",
+        "AWS Secrets Manager",
+        "AWS Security Hub",
+        "AWS Config",
+        "AWS IAM",
+        "Amazon S3",
+        "Amazon CloudWatch"
+      ],
+      "exit_criteria": {
+        "security_risk_score_max": 60,
+        "cloudtrail_active": true,
+        "hardcoded_credentials": 0,
+        "security_hub_pci_score_min": 60
+      },
+      "cost_usd": {
+        "consulting": 45000,
+        "aws_services": 2000,
+        "total": 47000
+      },
+      "score_targets": {
+        "cloud_readiness": 45,
+        "security_risk": 58,
+        "compliance_risk": 65,
+        "pci_readiness": 62
+      }
+    },
+    {
+      "phase": 2,
+      "name": "Landing Zone y Gobernanza",
+      "weeks": "5-8",
+      "duration_weeks": 4,
+      "priority": "HIGH",
+      "objective": "Establecer estructura de gobernanza multi-cuenta con Control Tower, implementar controles de auditoría continua con Audit Manager, y configurar gobernanza de datos con Lake Formation.",
+      "team": {
+        "cloud_architect": 1,
+        "security_engineer": 1,
+        "compliance_officer": 1
+      },
+      "activities": [
+        {
+          "week": 5,
+          "name": "Control Tower Landing Zone",
+          "tasks": [
+            "Desplegar Control Tower Landing Zone",
+            "Crear 5 cuentas: management, security, log-archive, payments-prod, payments-dev",
+            "Configurar SCPs críticos",
+            "Migrar recursos existentes a cuenta payments-prod"
+          ]
+        },
+        {
+          "week": 6,
+          "name": "Audit Manager",
+          "tasks": [
+            "Configurar Audit Manager en cuenta de seguridad",
+            "Crear assessment PCI-DSS para cuenta payments-prod",
+            "Crear assessment SOX con controles de segregación",
+            "Configurar destino de evidencia con Object Lock"
+          ]
+        },
+        {
+          "week": 7,
+          "name": "Macie y Detección de PII",
+          "tasks": [
+            "Habilitar Amazon Macie en cuenta payments-prod",
+            "Configurar classification job diario en bucket bankdemo",
+            "Configurar EventBridge: Macie findings → SNS → compliance-team",
+            "Documentar inventario de PII detectado"
+          ]
+        },
+        {
+          "week": 8,
+          "name": "Lake Formation y Glue Catalog",
+          "tasks": [
+            "Configurar Lake Formation como gestor de permisos",
+            "Implementar column-level security para roles",
+            "Configurar Glue Data Catalog con bankdemo_db",
+            "Crear crawlers para payments-raw, clean, errors"
+          ]
+        }
+      ],
+      "risks": [
+        {
+          "risk": "Complejidad de migración a estructura multi-cuenta",
+          "probability": "high",
+          "impact": "high",
+          "mitigation": "Planificación detallada de dependencias; migración incremental"
+        },
+        {
+          "risk": "Findings de Macie que requieren remediación urgente",
+          "probability": "high",
+          "impact": "high",
+          "mitigation": "Plan de remediación de PII pre-acordado con equipo legal"
+        },
+        {
+          "risk": "Disrupciones en acceso de usuarios durante Lake Formation",
+          "probability": "medium",
+          "impact": "medium",
+          "mitigation": "Testing exhaustivo en cuenta dev antes de aplicar en prod"
+        }
+      ],
+      "deliverables": [
+        "Control Tower Landing Zone activo con 5 cuentas",
+        "SCPs críticos activos y verificados",
+        "Audit Manager: assessments PCI-DSS y SOX activos",
+        "Macie: classification job diario activo",
+        "Lake Formation: column-level security implementado",
+        "Glue Data Catalog: 4 tablas catalogadas con linaje",
+        "Documento: Informe de Gobernanza Fase 2"
+      ],
+      "aws_services": [
+        "AWS Control Tower",
+        "AWS Audit Manager",
+        "Amazon Macie",
+        "AWS Lake Formation",
+        "AWS Glue",
+        "Amazon EventBridge",
+        "Amazon SNS"
+      ],
+      "exit_criteria": {
+        "control_tower_accounts": 5,
+        "audit_manager_assessments": 2,
+        "macie_active": true,
+        "lake_formation_column_security": true,
+        "compliance_risk_score_max": 55
+      },
+      "cost_usd": {
+        "consulting": 55000,
+        "aws_services": 4000,
+        "total": 59000
+      },
+      "score_targets": {
+        "cloud_readiness": 55,
+        "security_risk": 48,
+        "compliance_risk": 50,
+        "pci_readiness": 70
+      }
+    },
+    {
+      "phase": 3,
+      "name": "Data Lake y Migración de Datos",
+      "weeks": "9-14",
+      "duration_weeks": 6,
+      "priority": "HIGH",
+      "objective": "Migrar datos del sistema legacy a AWS, validar calidad post-migración, y establecer Aurora PostgreSQL como base de datos transaccional de producción.",
+      "team": {
+        "data_engineer": 2,
+        "dba": 1,
+        "cloud_architect": 1,
+        "qa_engineer": 1
+      },
+      "activities": [
+        {
+          "week": 9,
+          "name": "Infraestructura de Datos",
+          "tasks": [
+            "Provisionar Aurora PostgreSQL Multi-AZ",
+            "Crear VPC con subnets privadas en us-east-2a y us-east-2b",
+            "Configurar VPC Endpoints para S3, KMS, Secrets Manager, Athena, Glue",
+            "Configurar Security Groups restrictivos"
+          ]
+        },
+        {
+          "week": 10,
+          "name": "Migración con AWS DMS",
+          "tasks": [
+            "Configurar AWS DMS replication instance",
+            "Crear endpoints: SQL Server → Aurora PostgreSQL",
+            "Ejecutar full load de payments_raw",
+            "Configurar ongoing replication (CDC)"
+          ]
+        },
+        {
+          "week": 11,
+          "name": "Validación de Calidad de Datos",
+          "tasks": [
+            "Ejecutar DQ Engine sobre datos migrados en Aurora",
+            "Objetivo: DQ Score ≥ 90/100",
+            "Ejecutar compliance assessment sobre datos en Aurora",
+            "Comparar findings: legacy vs Aurora"
+          ]
+        },
+        {
+          "week": 12,
+          "name": "Pipeline ETL en AWS Glue",
+          "tasks": [
+            "Migrar lógica de DQ Engine a Glue jobs",
+            "Crear job raw-to-clean-etl con 15 reglas de calidad",
+            "Crear job compliance-enrichment-job",
+            "Configurar triggers S3 event → Glue → Athena"
+          ]
+        },
+        {
+          "week": 13,
+          "name": "Athena y Consultas de Auditoría",
+          "tasks": [
+            "Configurar workgroup audit con output cifrado KMS",
+            "Crear 4 named queries de auditoría",
+            "Validar acceso por roles IAM",
+            "Ejecutar prueba de auditoría simulada"
+          ]
+        },
+        {
+          "week": 14,
+          "name": "Cutover y Validación Final",
+          "tasks": [
+            "Ejecutar cutover de SQL Server a Aurora",
+            "Validar pipeline completo end-to-end en producción",
+            "Ejecutar smoke tests",
+            "Documentar runbook de operaciones post-migración"
+          ]
+        }
+      ],
+      "risks": [
+        {
+          "risk": "Pérdida de datos durante migración DMS",
+          "probability": "low",
+          "impact": "critical",
+          "mitigation": "Backup completo pre-migración; validación de checksums; rollback a SQL Server"
+        },
+        {
+          "risk": "DQ Score post-migración < 90/100",
+          "probability": "medium",
+          "impact": "high",
+          "mitigation": "Semana 11 dedicada exclusivamente a remediación de calidad"
+        },
+        {
+          "risk": "Dependencias no documentadas en SQL Server",
+          "probability": "medium",
+          "impact": "high",
+          "mitigation": "Análisis de dependencias en semana 9 antes de migración"
+        },
+        {
+          "risk": "Tiempo de cutover excede ventana de mantenimiento",
+          "probability": "medium",
+          "impact": "high",
+          "mitigation": "Dry run de cutover en entorno dev en semana 13"
+        }
+      ],
+      "deliverables": [
+        "Aurora PostgreSQL Multi-AZ activo con cifrado KMS",
+        "VPC con subnets privadas y VPC Endpoints configurados",
+        "Migración completa de payments_raw a Aurora (validada con checksums)",
+        "DQ Score post-migración ≥ 90/100",
+        "Glue jobs: raw-to-clean-etl y compliance-enrichment-job activos",
+        "Athena workgroup audit con 4 named queries",
+        "Runbook de operaciones post-migración",
+        "Documento: Informe de Migración de Datos Fase 3"
+      ],
+      "aws_services": [
+        "Amazon Aurora PostgreSQL",
+        "AWS DMS",
+        "Amazon VPC",
+        "AWS Glue",
+        "Amazon Athena",
+        "Amazon S3",
+        "AWS KMS",
+        "AWS Lake Formation"
+      ],
+      "exit_criteria": {
+        "aurora_multi_az_active": true,
+        "dq_score_min": 90,
+        "glue_jobs_active": true,
+        "athena_audit_queries": 4,
+        "cloud_readiness_score_min": 65
+      },
+      "cost_usd": {
+        "consulting": 95000,
+        "aws_services": 12000,
+        "total": 107000
+      },
+      "score_targets": {
+        "cloud_readiness": 68,
+        "security_risk": 40,
+        "compliance_risk": 38,
+        "pci_readiness": 78
+      }
+    },
+    {
+      "phase": 4,
+      "name": "Modernización de Aplicaciones",
+      "weeks": "15-20",
+      "duration_weeks": 6,
+      "priority": "HIGH",
+      "objective": "Containerizar y desplegar payments-core en Amazon EKS, implementar perímetro de seguridad (WAF + ALB), y eliminar todas las dependencias del sistema legacy on-premises.",
+      "team": {
+        "backend_developer": 2,
+        "devops_engineer": 1,
+        "security_engineer": 1,
+        "cloud_architect": 1
+      },
+      "activities": [
+        {
+          "week": 15,
+          "name": "Containerización",
+          "tasks": [
+            "Containerizar payments-core en imagen Docker",
+            "Eliminar credenciales hardcodeadas (reemplazar con Secrets Manager SDK)",
+            "Crear repositorio en Amazon ECR con escaneo de vulnerabilidades",
+            "Configurar pipeline CI/CD (CodePipeline + CodeBuild)"
+          ]
+        },
+        {
+          "week": 16,
+          "name": "Amazon EKS",
+          "tasks": [
+            "Provisionar cluster EKS en subnets privadas Multi-AZ",
+            "Implementar IRSA para payments-core",
+            "Desplegar payments-core con 2 réplicas mínimas",
+            "Configurar Horizontal Pod Autoscaler"
+          ]
+        },
+        {
+          "week": 17,
+          "name": "Perímetro de Seguridad",
+          "tasks": [
+            "Desplegar ALB con TLS 1.3 obligatorio",
+            "Configurar AWS WAF con reglas OWASP Top 10",
+            "Implementar rate limiting: 1000 req/min por IP",
+            "Configurar WAF logging a S3 con cifrado KMS"
+          ]
+        },
+        {
+          "week": 18,
+          "name": "Observabilidad",
+          "tasks": [
+            "Configurar CloudWatch Container Insights para EKS",
+            "Crear dashboards de métricas: latencia, error rate, throughput",
+            "Habilitar Amazon GuardDuty",
+            "Configurar alarmas críticas → SNS → on-call team"
+          ]
+        },
+        {
+          "week": 19,
+          "name": "Testing de Seguridad",
+          "tasks": [
+            "Ejecutar penetration testing sobre endpoints",
+            "Validar WAF bloqueando ataques OWASP Top 10",
+            "Ejecutar AWS Inspector sobre imágenes ECR",
+            "Remediar findings críticos y altos"
+          ]
+        },
+        {
+          "week": 20,
+          "name": "Descomisión Legacy",
+          "tasks": [
+            "Validar 100% del tráfico sobre EKS/Aurora",
+            "Ejecutar prueba de failover Aurora Multi-AZ",
+            "Descomisionar SQL Server on-premises",
+            "Actualizar documentación de arquitectura"
+          ]
+        }
+      ],
+      "risks": [
+        {
+          "risk": "Vulnerabilidades en imagen Docker de payments-core",
+          "probability": "medium",
+          "impact": "high",
+          "mitigation": "ECR image scanning + Inspector antes de despliegue en prod"
+        },
+        {
+          "risk": "Incompatibilidad de aplicación con Aurora PostgreSQL",
+          "probability": "medium",
+          "impact": "high",
+          "mitigation": "Testing exhaustivo en semanas 15-16 antes de cutover"
+        },
+        {
+          "risk": "Configuración incorrecta de WAF bloqueando tráfico legítimo",
+          "probability": "medium",
+          "impact": "high",
+          "mitigation": "Testing en modo COUNT antes de activar modo BLOCK"
+        },
+        {
+          "risk": "Fallo en descomisión de SQL Server con dependencias ocultas",
+          "probability": "medium",
+          "impact": "high",
+          "mitigation": "Período de coexistencia 30 días; monitoreo de conexiones a SQL Server"
+        }
+      ],
+      "deliverables": [
+        "Imagen Docker de payments-core en ECR (sin vulnerabilidades críticas)",
+        "Cluster EKS Multi-AZ con payments-core desplegado",
+        "ALB + WAF activo con reglas OWASP Top 10",
+        "Pipeline CI/CD activo (CodePipeline + CodeBuild)",
+        "CloudWatch dashboards y alarmas configurados",
+        "GuardDuty activo",
+        "Prueba de failover Aurora documentada",
+        "Documento: Informe de Modernización de Aplicaciones Fase 4"
+      ],
+      "aws_services": [
+        "Amazon EKS",
+        "Amazon ECR",
+        "AWS WAF",
+        "Application Load Balancer",
+        "AWS CodePipeline",
+        "AWS CodeBuild",
+        "Amazon CloudWatch",
+        "Amazon GuardDuty",
+        "Amazon EventBridge"
+      ],
+      "exit_criteria": {
+        "eks_active": true,
+        "waf_active": true,
+        "legacy_dependencies": 0,
+        "security_risk_score_max": 35,
+        "cloud_readiness_score_min": 78
+      },
+      "cost_usd": {
+        "consulting": 120000,
+        "aws_services": 18000,
+        "total": 138000
+      },
+      "score_targets": {
+        "cloud_readiness": 78,
+        "security_risk": 32,
+        "compliance_risk": 28,
+        "pci_readiness": 85
+      }
+    },
+    {
+      "phase": 5,
+      "name": "Optimización y Compliance",
+      "weeks": "21-24",
+      "duration_weeks": 4,
+      "priority": "MEDIUM",
+      "objective": "Completar controles de compliance, optimizar costos operativos, implementar dashboards ejecutivos, y preparar documentación para auditoría externa PCI-DSS y SOX.",
+      "team": {
+        "cloud_architect": 1,
+        "compliance_officer": 1,
+        "finops_engineer": 1,
+        "data_analyst": 1
+      },
+      "activities": [
+        {
+          "week": 21,
+          "name": "QuickSight y Reportería Ejecutiva",
+          "tasks": [
+            "Configurar Amazon QuickSight con fuente de datos Athena",
+            "Crear dashboard ejecutivo: DQ, Security, Compliance, Cloud Readiness scores",
+            "Crear dashboard operacional: transacciones, error rate, latencia",
+            "Configurar distribución automática de reportes a CIO/CTO/CISO"
+          ]
+        },
+        {
+          "week": 22,
+          "name": "Remediación Automática",
+          "tasks": [
+            "Implementar Lambda para remediación automática de Config rules",
+            "Automatizar: cifrado S3, bloqueo acceso público, habilitación CloudTrail",
+            "Revisar y cerrar todos los findings de Audit Manager",
+            "Objetivo: Audit Manager compliance score > 85%"
+          ]
+        },
+        {
+          "week": 23,
+          "name": "Prueba de Auditoría PCI-DSS",
+          "tasks": [
+            "Ejecutar self-assessment PCI-DSS SAQ D completo",
+            "Documentar evidencia para los 12 requisitos PCI-DSS",
+            "Ejecutar vulnerability scan con AWS Inspector",
+            "Preparar paquete de evidencia para QSA externo"
+          ]
+        },
+        {
+          "week": 24,
+          "name": "Cierre y Documentación Final",
+          "tasks": [
+            "Ejecutar pipeline completo y documentar scores finales",
+            "Documentar runbooks operacionales",
+            "Presentación ejecutiva final: CIO, CTO, Head of Risk, Cloud Director",
+            "Entregar paquete completo de documentación para auditoría"
+          ]
+        }
+      ],
+      "risks": [
+        {
+          "risk": "Findings de auditoría PCI-DSS que requieren remediación adicional",
+          "probability": "medium",
+          "impact": "high",
+          "mitigation": "Buffer de 2 semanas post-fase 5 para remediaciones de auditoría"
+        },
+        {
+          "risk": "Costos AWS superiores a estimación",
+          "probability": "medium",
+          "impact": "medium",
+          "mitigation": "FinOps review semanal; Reserved Instances para Aurora/EKS"
+        },
+        {
+          "risk": "Documentación insuficiente para QSA",
+          "probability": "low",
+          "impact": "high",
+          "mitigation": "Audit Manager genera evidencia automática; revisión con compliance officer"
+        }
+      ],
+      "deliverables": [
+        "QuickSight dashboards ejecutivos y operacionales activos",
+        "Remediación automática de Config rules implementada",
+        "Audit Manager: compliance score PCI-DSS > 85%, SOX > 85%",
+        "Self-assessment PCI-DSS SAQ D completado",
+        "Paquete de evidencia para QSA externo",
+        "Runbooks operacionales documentados",
+        "Presentación ejecutiva final",
+        "Documento: Informe de Cierre y Estado Final del Sistema"
+      ],
+      "aws_services": [
+        "Amazon QuickSight",
+        "AWS Audit Manager",
+        "AWS Config",
+        "AWS Lambda",
+        "AWS Systems Manager",
+        "AWS Inspector",
+        "Amazon CloudWatch",
+        "AWS Security Hub"
+      ],
+      "exit_criteria": {
+        "cloud_readiness_score_min": 85,
+        "security_risk_score_max": 25,
+        "compliance_risk_score_max": 20,
+        "audit_manager_pci_score_min": 85,
+        "audit_manager_sox_score_min": 85,
+        "ready_for_qsa_audit": true
+      },
+      "cost_usd": {
+        "consulting": 60000,
+        "aws_services": 8000,
+        "total": 68000
+      },
+      "score_targets": {
+        "cloud_readiness": 85,
+        "security_risk": 25,
+        "compliance_risk": 20,
+        "pci_readiness": 90
+      }
+    }
+  ],
+  "investment_summary": {
+    "phase_1_usd": 47000,
+    "phase_2_usd": 59000,
+    "phase_3_usd": 107000,
+    "phase_4_usd": 138000,
+    "phase_5_usd": 68000,
+    "subtotal_usd": 419000,
+    "contingency_15pct_usd": 62850,
+    "total_usd": 481850,
+    "annual_savings_usd": 285000,
+    "roi_3y_pct": 59,
+    "payback_months": 12,
+    "monthly_aws_cost_post_migration_usd": 783
+  },
+  "score_progression": [
+    {"milestone": "Baseline",    "cloud_readiness": 38, "security_risk": 78, "compliance_risk": 74, "pci_readiness": 56},
+    {"milestone": "Post Fase 1", "cloud_readiness": 45, "security_risk": 58, "compliance_risk": 65, "pci_readiness": 62},
+    {"milestone": "Post Fase 2", "cloud_readiness": 55, "security_risk": 48, "compliance_risk": 50, "pci_readiness": 70},
+    {"milestone": "Post Fase 3", "cloud_readiness": 68, "security_risk": 40, "compliance_risk": 38, "pci_readiness": 78},
+    {"milestone": "Post Fase 4", "cloud_readiness": 78, "security_risk": 32, "compliance_risk": 28, "pci_readiness": 85},
+    {"milestone": "Post Fase 5", "cloud_readiness": 85, "security_risk": 25, "compliance_risk": 20, "pci_readiness": 90}
+  ],
+  "recommended_team": [
+    {"role": "Cloud Architect (Lead)", "phases": [1,2,3,4,5], "dedication_pct": 100},
+    {"role": "Security Engineer",      "phases": [1,2,3,4],   "dedication_pct": 100},
+    {"role": "Data Engineer",          "phases": [3,4],        "dedication_pct": 100},
+    {"role": "DBA / Migration Specialist", "phases": [1,3],   "dedication_pct": 100},
+    {"role": "Backend Developer",      "phases": [4],          "dedication_pct": 100},
+    {"role": "DevOps Engineer",        "phases": [4,5],        "dedication_pct": 100},
+    {"role": "Compliance Officer",     "phases": [2,5],        "dedication_pct": 50},
+    {"role": "FinOps Engineer",        "phases": [5],          "dedication_pct": 50},
+    {"role": "QA Engineer",            "phases": [3,4],        "dedication_pct": 50}
+  ]
+}

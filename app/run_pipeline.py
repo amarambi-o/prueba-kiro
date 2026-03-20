@@ -8,7 +8,7 @@ import argparse, os, sys, time
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import extractor, dq_engine, athena_setup, compliance_engine
+import extractor, dq_engine, athena_setup, compliance_engine, modernization_advisor
 
 BUCKET_DEFAULT = "bank-modernization-advisor-382736933668-us-east-2"
 
@@ -65,16 +65,22 @@ def main():
     print(f"✓ DQ Engine OK ({time.time()-t:.1f}s)")
 
     # PASO 3 — Athena
-    sep("PASO 3/4 — Athena setup")
+    sep("PASO 3/5 — Athena setup")
     t = time.time()
     athena_setup.setup(bucket, prefix)
     print(f"✓ Athena OK ({time.time()-t:.1f}s)")
 
     # PASO 4 — Compliance Analysis
-    sep("PASO 4/4 — Compliance Analysis")
+    sep("PASO 4/5 — Compliance Analysis")
     t = time.time()
     comp_result = compliance_engine.run_compliance(bucket, prefix)
     print(f"✓ Compliance OK ({time.time()-t:.1f}s)")
+
+    # PASO 5 — Modernization Advisor
+    sep("PASO 5/5 — Modernization Advisor")
+    t = time.time()
+    adv_result = modernization_advisor.run_modernization_advisor(bucket, prefix)
+    print(f"✓ Modernization Advisor OK ({time.time()-t:.1f}s)")
 
     # Resumen
     print(f"\n{'#'*55}")
@@ -86,7 +92,9 @@ def main():
     print(f"  Athena     : {athena_setup.ATHENA_DATABASE}.payments_clean / payments_errors")
     print(f"  DQ Output  : s3://{bucket}/{prefix}/output/")
     print(f"  Compliance : s3://{bucket}/{prefix}/output/compliance/")
+    print(f"  Advisor    : s3://{bucket}/{prefix}/output/modernization/")
     print(f"  Findings   : {comp_result['findings_count']} | Reg.Risk: {comp_result['scores']['regulatory_risk_score']}/100")
+    print(f"  Strategy   : {adv_result['strategy'].upper()} | Complexity: {adv_result['complexity_score']}/100 | ROI 3Y: {adv_result['roi_3y_pct']}%")
 
 if __name__ == "__main__":
     main()

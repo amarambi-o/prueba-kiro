@@ -1,0 +1,487 @@
+{
+  "metadata": {
+    "title": "Controles de Seguridad — Arquitectura Objetivo AWS Bancaria",
+    "system": "payments-core / BankDemo",
+    "version": "1.0",
+    "generated_at": "2026-03-20",
+    "classification": "Confidential — Security Use Only",
+    "total_controls": 42,
+    "implemented": 0,
+    "required": 42,
+    "critical": 14,
+    "high": 18,
+    "medium": 10
+  },
+  "controls_by_service": {
+    "AWS_Control_Tower": [
+      {
+        "control_id": "CT-001",
+        "name": "Landing Zone multi-cuenta",
+        "description": "Estructura de cuentas separadas: management, security, log-archive, payments-prod, payments-dev",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 1", "SOX"],
+        "evidence_expected": "Control Tower dashboard — account structure screenshot",
+        "remediation": "Habilitar Control Tower y crear OU structure con 5 cuentas mínimas"
+      },
+      {
+        "control_id": "CT-002",
+        "name": "SCP: Bloqueo de buckets S3 públicos",
+        "description": "Service Control Policy que previene la creación de buckets S3 con acceso público en todas las cuentas",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 1.3", "NIST CSF PR.AC-3"],
+        "evidence_expected": "SCP policy JSON + Control Tower guardrail status",
+        "remediation": "Habilitar guardrail 'Disallow public S3 buckets' en Control Tower"
+      },
+      {
+        "control_id": "CT-003",
+        "name": "SCP: CloudTrail obligatorio en todas las regiones",
+        "description": "Previene la desactivación de CloudTrail en cualquier cuenta u región",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 10.1", "SOX Sección 404"],
+        "evidence_expected": "SCP policy + CloudTrail status en todas las regiones",
+        "remediation": "Habilitar guardrail 'Require CloudTrail in all regions'"
+      },
+      {
+        "control_id": "CT-004",
+        "name": "SCP: Prohibición de uso de cuenta root",
+        "description": "Alerta y bloqueo de acciones realizadas con credenciales root",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["PCI-DSS Req. 8.2.1"],
+        "evidence_expected": "CloudWatch alarm para root login + SCP activo",
+        "remediation": "Habilitar guardrail 'Disallow root account usage' + CloudWatch alarm"
+      }
+    ],
+    "AWS_Security_Hub": [
+      {
+        "control_id": "SH-001",
+        "name": "Estándar PCI-DSS v3.2.1 habilitado",
+        "description": "140 controles automatizados de PCI-DSS evaluados continuamente",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS v4.0"],
+        "evidence_expected": "Security Hub — PCI-DSS standard compliance score > 80%",
+        "remediation": "Habilitar Security Hub y activar PCI-DSS standard en cuenta security"
+      },
+      {
+        "control_id": "SH-002",
+        "name": "Estándar CIS AWS Foundations Benchmark v1.4",
+        "description": "58 controles de hardening de infraestructura AWS",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["NIST CSF", "CIS Controls"],
+        "evidence_expected": "Security Hub — CIS standard compliance score > 75%",
+        "remediation": "Activar CIS standard en Security Hub"
+      },
+      {
+        "control_id": "SH-003",
+        "name": "Integración GuardDuty → Security Hub",
+        "description": "Findings de amenazas de GuardDuty centralizados en Security Hub",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["NIST CSF DE.CM-1"],
+        "evidence_expected": "Security Hub findings con source GuardDuty",
+        "remediation": "Habilitar GuardDuty y configurar integración con Security Hub"
+      },
+      {
+        "control_id": "SH-004",
+        "name": "Integración Macie → Security Hub",
+        "description": "Findings de PII de Macie centralizados en Security Hub",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["GDPR Art. 32", "PCI-DSS Req. 3"],
+        "evidence_expected": "Security Hub findings con source Macie",
+        "remediation": "Habilitar Macie y configurar integración con Security Hub"
+      }
+    ],
+    "AWS_Audit_Manager": [
+      {
+        "control_id": "AM-001",
+        "name": "Assessment PCI-DSS activo",
+        "description": "Evaluación continua de controles PCI-DSS con recolección automática de evidencia",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS v4.0"],
+        "evidence_expected": "Audit Manager — PCI-DSS assessment con evidencia recolectada",
+        "remediation": "Crear assessment PCI-DSS en Audit Manager apuntando a cuenta payments-prod"
+      },
+      {
+        "control_id": "AM-002",
+        "name": "Assessment SOX activo",
+        "description": "Evaluación continua de controles SOX Sección 302/404",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["SOX Sección 302", "SOX Sección 404"],
+        "evidence_expected": "Audit Manager — SOX assessment con evidencia recolectada",
+        "remediation": "Crear assessment SOX en Audit Manager"
+      },
+      {
+        "control_id": "AM-003",
+        "name": "Retención de evidencia 7 años",
+        "description": "Evidencia de auditoría almacenada con Object Lock COMPLIANCE por 7 años",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["SOX", "PCI-DSS Req. 10.7"],
+        "evidence_expected": "S3 bucket log-archive/audit-manager/ con Object Lock activo",
+        "remediation": "Configurar Audit Manager con S3 destination con Object Lock COMPLIANCE"
+      }
+    ],
+    "AWS_Config": [
+      {
+        "control_id": "CFG-001",
+        "name": "rds-storage-encrypted",
+        "description": "Verifica que todas las instancias RDS/Aurora tengan cifrado en reposo habilitado",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 3.4", "GDPR Art. 32"],
+        "evidence_expected": "Config rule compliance: COMPLIANT para Aurora instance",
+        "remediation": "Habilitar cifrado KMS en Aurora al momento de creación (no se puede habilitar post-creación)"
+      },
+      {
+        "control_id": "CFG-002",
+        "name": "s3-bucket-server-side-encryption-enabled",
+        "description": "Verifica que todos los buckets S3 tengan SSE habilitado",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 3.4"],
+        "evidence_expected": "Config rule compliance: COMPLIANT para todos los buckets bankdemo",
+        "remediation": "Habilitar SSE-KMS en todos los buckets; Config auto-remediation disponible"
+      },
+      {
+        "control_id": "CFG-003",
+        "name": "s3-bucket-ssl-requests-only",
+        "description": "Verifica que los buckets S3 rechacen peticiones HTTP (solo HTTPS)",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["PCI-DSS Req. 4.1"],
+        "evidence_expected": "Config rule compliance: COMPLIANT + bucket policy con aws:SecureTransport",
+        "remediation": "Agregar bucket policy: Deny s3:* cuando aws:SecureTransport = false"
+      },
+      {
+        "control_id": "CFG-004",
+        "name": "cloudtrail-enabled",
+        "description": "Verifica que CloudTrail esté habilitado en todas las regiones",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 10.1", "SOX Sección 404"],
+        "evidence_expected": "Config rule compliance: COMPLIANT en todas las regiones",
+        "remediation": "Habilitar CloudTrail multi-región con log file validation"
+      },
+      {
+        "control_id": "CFG-005",
+        "name": "iam-root-access-key-check",
+        "description": "Verifica que la cuenta root no tenga access keys activas",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 8.2.1", "CIS 1.4"],
+        "evidence_expected": "Config rule compliance: COMPLIANT",
+        "remediation": "Eliminar access keys de cuenta root desde IAM console"
+      },
+      {
+        "control_id": "CFG-006",
+        "name": "vpc-flow-logs-enabled",
+        "description": "Verifica que VPC Flow Logs estén habilitados en todas las VPCs",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["PCI-DSS Req. 10.3", "NIST CSF DE.CM-1"],
+        "evidence_expected": "Config rule compliance: COMPLIANT + Flow Logs activos en VPC",
+        "remediation": "Habilitar VPC Flow Logs con destino CloudWatch Logs o S3"
+      },
+      {
+        "control_id": "CFG-007",
+        "name": "kms-cmk-not-scheduled-for-deletion",
+        "description": "Verifica que ninguna CMK esté programada para eliminación",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["PCI-DSS Req. 3.5"],
+        "evidence_expected": "Config rule compliance: COMPLIANT para todas las CMKs",
+        "remediation": "Cancelar eliminación de CMKs; implementar alertas para intentos de eliminación"
+      }
+    ],
+    "AWS_CloudTrail": [
+      {
+        "control_id": "CT-LOG-001",
+        "name": "Trail multi-región con validación de integridad",
+        "description": "CloudTrail habilitado en todas las regiones con log file validation activado",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 10.1", "SOX Sección 404", "Basel III BCBS 239"],
+        "evidence_expected": "CloudTrail trail con IsMultiRegionTrail=true y LogFileValidationEnabled=true",
+        "remediation": "Crear trail con --is-multi-region-trail --enable-log-file-validation"
+      },
+      {
+        "control_id": "CT-LOG-002",
+        "name": "Object Lock COMPLIANCE en bucket de logs",
+        "description": "Logs de CloudTrail almacenados con Object Lock COMPLIANCE — inmutables por 7 años",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["SOX Sección 404", "PCI-DSS Req. 10.7"],
+        "evidence_expected": "S3 bucket log-archive/cloudtrail/ con Object Lock COMPLIANCE activo",
+        "remediation": "Crear bucket con Object Lock habilitado (no se puede habilitar post-creación)"
+      },
+      {
+        "control_id": "CT-LOG-003",
+        "name": "Cifrado de logs con KMS CMK",
+        "description": "Logs de CloudTrail cifrados con CMK dedicada (cloudtrail-cmk)",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["PCI-DSS Req. 3.4"],
+        "evidence_expected": "CloudTrail trail con KMSKeyId configurado",
+        "remediation": "Actualizar trail con --kms-key-id cloudtrail-cmk"
+      }
+    ],
+    "AWS_KMS": [
+      {
+        "control_id": "KMS-001",
+        "name": "CMK payments-data-cmk",
+        "description": "Customer Managed Key dedicada para datos de pagos (Aurora + S3 clean/raw/errors)",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 3.5", "GDPR Art. 32"],
+        "evidence_expected": "KMS CMK activa con alias payments-data-cmk + key policy restrictiva",
+        "remediation": "Crear CMK con rotación anual; key policy permite solo roles autorizados"
+      },
+      {
+        "control_id": "KMS-002",
+        "name": "Rotación automática anual de CMKs",
+        "description": "Todas las CMKs con rotación automática habilitada (365 días)",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["PCI-DSS Req. 3.6", "NIST 800-53 SC-12"],
+        "evidence_expected": "KMS — EnableKeyRotation=true para todas las CMKs",
+        "remediation": "aws kms enable-key-rotation --key-id <key-id> para cada CMK"
+      },
+      {
+        "control_id": "KMS-003",
+        "name": "Key policy de mínimo privilegio",
+        "description": "Key policies que permiten acceso solo a roles IAM específicos por CMK",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["PCI-DSS Req. 7", "SOX — Segregación de funciones"],
+        "evidence_expected": "Key policy JSON con Principal restringido a roles específicos",
+        "remediation": "Revisar y restringir key policies; eliminar acceso a * en Principal"
+      }
+    ],
+    "Amazon_Macie": [
+      {
+        "control_id": "MAC-001",
+        "name": "Macie habilitado en buckets de pagos",
+        "description": "Escaneo diario de buckets bankdemo/* para detección de PII y datos de tarjetas",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["GDPR Art. 30", "PCI-DSS Req. 3.2"],
+        "evidence_expected": "Macie job activo con frecuencia DAILY en bucket bankdemo",
+        "remediation": "Habilitar Macie y crear classification job para bucket bankdemo"
+      },
+      {
+        "control_id": "MAC-002",
+        "name": "Alertas de PII a equipo de compliance",
+        "description": "Findings de Macie enrutados via EventBridge → SNS → compliance-team",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["GDPR Art. 33 — Notificación de brechas"],
+        "evidence_expected": "EventBridge rule activa para Macie findings + SNS topic configurado",
+        "remediation": "Crear EventBridge rule: source=macie → SNS topic compliance-alerts"
+      }
+    ],
+    "AWS_Lake_Formation": [
+      {
+        "control_id": "LF-001",
+        "name": "Column-level security en tablas PII",
+        "description": "customer_name y customer_email inaccesibles para analyst-role",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 7", "GDPR — Minimización de datos"],
+        "evidence_expected": "Lake Formation permissions — analyst-role sin acceso a columnas PII",
+        "remediation": "Configurar Lake Formation column permissions: DENY customer_name, customer_email para analyst-role"
+      },
+      {
+        "control_id": "LF-002",
+        "name": "Auditoría de acceso a datos sensibles",
+        "description": "Cada query de audit-role sobre tablas con PII queda registrada en CloudTrail",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["SOX — Segregación de funciones", "PCI-DSS Req. 10"],
+        "evidence_expected": "CloudTrail logs con eventos Lake Formation para audit-role",
+        "remediation": "Habilitar Lake Formation audit logging; verificar en CloudTrail"
+      }
+    ],
+    "Amazon_Aurora": [
+      {
+        "control_id": "AUR-001",
+        "name": "Cifrado en reposo con KMS CMK",
+        "description": "Aurora PostgreSQL con cifrado habilitado usando payments-data-cmk",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 3.4", "GDPR Art. 32"],
+        "evidence_expected": "Aurora cluster con StorageEncrypted=true y KmsKeyId=payments-data-cmk",
+        "remediation": "Crear cluster Aurora con --storage-encrypted --kms-key-id payments-data-cmk"
+      },
+      {
+        "control_id": "AUR-002",
+        "name": "IAM database authentication",
+        "description": "Autenticación a Aurora via IAM tokens — sin contraseñas en código",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 8.2", "SOX — Credenciales seguras"],
+        "evidence_expected": "Aurora cluster con IAMDatabaseAuthenticationEnabled=true",
+        "remediation": "Habilitar IAM auth en cluster; actualizar aplicación para usar tokens IAM"
+      },
+      {
+        "control_id": "AUR-003",
+        "name": "Multi-AZ para alta disponibilidad",
+        "description": "Aurora Multi-AZ con failover automático < 30 segundos",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["SOX — Disponibilidad de sistemas financieros", "PCI-DSS Req. 12.10"],
+        "evidence_expected": "Aurora cluster con MultiAZ=true y replica en us-east-2b",
+        "remediation": "Crear Aurora cluster con --availability-zones us-east-2a us-east-2b"
+      },
+      {
+        "control_id": "AUR-004",
+        "name": "Deletion protection habilitado",
+        "description": "Protección contra eliminación accidental de base de datos de producción",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["SOX — Integridad de datos financieros"],
+        "evidence_expected": "Aurora cluster con DeletionProtection=true",
+        "remediation": "aws rds modify-db-cluster --deletion-protection"
+      }
+    ],
+    "Amazon_S3": [
+      {
+        "control_id": "S3-001",
+        "name": "Block Public Access en todos los buckets",
+        "description": "BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets = true",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 1.3"],
+        "evidence_expected": "S3 Block Public Access settings = ON para bucket bankdemo",
+        "remediation": "aws s3api put-public-access-block con todos los flags en true"
+      },
+      {
+        "control_id": "S3-002",
+        "name": "Bucket policy: solo HTTPS",
+        "description": "Deny s3:* cuando aws:SecureTransport = false",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["PCI-DSS Req. 4.1"],
+        "evidence_expected": "Bucket policy con Condition: aws:SecureTransport: false → Deny",
+        "remediation": "Agregar statement Deny con Condition StringEquals aws:SecureTransport false"
+      },
+      {
+        "control_id": "S3-003",
+        "name": "Object Lock COMPLIANCE en zona audit",
+        "description": "bankdemo/audit/ con Object Lock COMPLIANCE — logs inmutables 7 años",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["SOX Sección 404", "PCI-DSS Req. 10.7"],
+        "evidence_expected": "S3 bucket con ObjectLockEnabled=true y DefaultRetention COMPLIANCE 7 años",
+        "remediation": "Crear bucket con --object-lock-enabled-for-bucket (no se puede habilitar post-creación)"
+      },
+      {
+        "control_id": "S3-004",
+        "name": "Versioning habilitado",
+        "description": "Versioning activo en todas las zonas del data lake",
+        "status": "required",
+        "severity": "medium",
+        "frameworks": ["SOX — Integridad de datos"],
+        "evidence_expected": "S3 versioning status = Enabled para todos los prefijos",
+        "remediation": "aws s3api put-bucket-versioning --versioning-configuration Status=Enabled"
+      }
+    ],
+    "AWS_IAM": [
+      {
+        "control_id": "IAM-001",
+        "name": "MFA obligatorio para todos los usuarios IAM",
+        "description": "Ningún usuario IAM puede operar sin MFA habilitado",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 8.3"],
+        "evidence_expected": "IAM credential report — MFA_active=true para todos los usuarios",
+        "remediation": "Crear policy IAM que deniegue todas las acciones si MFA no está activo"
+      },
+      {
+        "control_id": "IAM-002",
+        "name": "Sin inline policies — solo managed policies",
+        "description": "Todas las políticas IAM como managed policies; sin inline policies",
+        "status": "required",
+        "severity": "medium",
+        "frameworks": ["SOX — Segregación de funciones", "CIS 1.16"],
+        "evidence_expected": "Config rule iam-no-inline-policy: COMPLIANT",
+        "remediation": "Migrar inline policies a managed policies; Config rule para enforcement"
+      },
+      {
+        "control_id": "IAM-003",
+        "name": "Access Analyzer habilitado",
+        "description": "IAM Access Analyzer detecta accesos externos no intencionados a recursos",
+        "status": "required",
+        "severity": "medium",
+        "frameworks": ["NIST CSF ID.AM-3"],
+        "evidence_expected": "IAM Access Analyzer activo en región us-east-2",
+        "remediation": "Habilitar Access Analyzer en IAM console para la región"
+      }
+    ],
+    "AWS_Secrets_Manager": [
+      {
+        "control_id": "SM-001",
+        "name": "Migración de credenciales hardcodeadas",
+        "description": "Todas las credenciales de base de datos y API keys migradas a Secrets Manager",
+        "status": "required",
+        "severity": "critical",
+        "frameworks": ["PCI-DSS Req. 8.2", "OWASP A07 — Identification Failures"],
+        "evidence_expected": "Secrets Manager con secretos activos; código sin credenciales hardcodeadas",
+        "remediation": "Crear secretos en Secrets Manager; actualizar código para usar boto3 get_secret_value"
+      },
+      {
+        "control_id": "SM-002",
+        "name": "Rotación automática de secretos",
+        "description": "Credenciales de Aurora rotadas automáticamente cada 30 días",
+        "status": "required",
+        "severity": "high",
+        "frameworks": ["PCI-DSS Req. 8.6"],
+        "evidence_expected": "Secrets Manager — RotationEnabled=true para secreto Aurora",
+        "remediation": "Habilitar rotación automática con Lambda rotation function para Aurora"
+      }
+    ]
+  },
+  "summary": {
+    "total_controls": 42,
+    "by_severity": {
+      "critical": 14,
+      "high": 18,
+      "medium": 10
+    },
+    "by_framework": {
+      "PCI-DSS": 28,
+      "SOX": 18,
+      "GDPR": 10,
+      "NIST_CSF": 8,
+      "Basel_III": 4
+    },
+    "by_service": {
+      "AWS_Control_Tower": 4,
+      "AWS_Security_Hub": 4,
+      "AWS_Audit_Manager": 3,
+      "AWS_Config": 7,
+      "AWS_CloudTrail": 3,
+      "AWS_KMS": 3,
+      "Amazon_Macie": 2,
+      "AWS_Lake_Formation": 2,
+      "Amazon_Aurora": 4,
+      "Amazon_S3": 4,
+      "AWS_IAM": 3,
+      "AWS_Secrets_Manager": 2
+    },
+    "implementation_priority": [
+      "SEMANA 1-2: CT-LOG-001, CT-LOG-002, S3-001, S3-002, KMS-001, SM-001 (fundamentos críticos)",
+      "SEMANA 3-4: CFG-001 a CFG-007, IAM-001, AUR-001, AUR-002 (hardening base)",
+      "SEMANA 5-8: CT-001 a CT-004, SH-001 a SH-004, AM-001 a AM-003 (gobernanza)",
+      "SEMANA 9-16: MAC-001, MAC-002, LF-001, LF-002, AUR-003, AUR-004 (datos y acceso)",
+      "SEMANA 17-24: IAM-002, IAM-003, SM-002, S3-003, S3-004, KMS-002, KMS-003 (optimización)"
+    ]
+  }
+}

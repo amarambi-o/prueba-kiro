@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+env/
+
+# Credenciales y configuración local
+.env
+.env.*
+*.env
+config.local.*
+secrets.*
+
+# AWS
+.aws/
+aws_credentials
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs y outputs temporales
+*.log
+*.tmp
