@@ -8,7 +8,7 @@ import argparse, os, sys, time
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import extractor, dq_engine, athena_setup, compliance_engine, modernization_advisor
+import extractor, dq_engine, athena_setup, compliance_engine, modernization_advisor, architecture_report, discovery_report, executive_report
 
 BUCKET_DEFAULT = "bank-modernization-advisor-382736933668-us-east-2"
 
@@ -77,10 +77,28 @@ def main():
     print(f"✓ Compliance OK ({time.time()-t:.1f}s)")
 
     # PASO 5 — Modernization Advisor
-    sep("PASO 5/5 — Modernization Advisor")
+    sep("PASO 5/7 — Modernization Advisor")
     t = time.time()
     adv_result = modernization_advisor.run_modernization_advisor(bucket, prefix)
     print(f"✓ Modernization Advisor OK ({time.time()-t:.1f}s)")
+
+    # PASO 6 — Architecture Report
+    sep("PASO 6/8 — Architecture Report")
+    t = time.time()
+    architecture_report.generate(bucket, prefix)
+    print(f"✓ Architecture Report OK ({time.time()-t:.1f}s)")
+
+    # PASO 7 — Discovery Report
+    sep("PASO 7/8 — Discovery Report")
+    t = time.time()
+    discovery_report.generate(bucket, prefix)
+    print(f"✓ Discovery Report OK ({time.time()-t:.1f}s)")
+
+    # PASO 8 — Executive Report
+    sep("PASO 8/8 — Executive Report")
+    t = time.time()
+    executive_report.generate(bucket, prefix)
+    print(f"✓ Executive Report OK ({time.time()-t:.1f}s)")
 
     # Resumen
     print(f"\n{'#'*55}")
@@ -95,6 +113,7 @@ def main():
     print(f"  Advisor    : s3://{bucket}/{prefix}/output/modernization/")
     print(f"  Findings   : {comp_result['findings_count']} | Reg.Risk: {comp_result['scores']['regulatory_risk_score']}/100")
     print(f"  Strategy   : {adv_result['strategy'].upper()} | Complexity: {adv_result['complexity_score']}/100 | ROI 3Y: {adv_result['roi_3y_pct']}%")
+    print(f"  Reports    : reports/architecture.md · reports/discovery.md · reports/executive_report.md")
 
 if __name__ == "__main__":
     main()

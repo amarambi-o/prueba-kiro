@@ -1,8 +1,0 @@
-{
-  "eks_monthly": 800,
-  "aurora_monthly": 1200,
-  "cloudwatch": 150,
-  "secrets_manager": 50,
-  "waf": 200,
-  "total_estimated": 2400
-}

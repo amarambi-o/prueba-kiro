@@ -36,3 +36,6 @@ Thumbs.db
 # Logs y outputs temporales
 *.log
 *.tmp
+
+# Reportes generados automáticamente por el pipeline
+reports/
