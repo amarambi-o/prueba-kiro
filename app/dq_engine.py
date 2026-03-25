@@ -26,6 +26,7 @@ from typing import Any, Dict, List, Tuple
 
 import boto3
 import pandas as pd
+import aws_client
 
 # ---------------------------------------------------------------------------
 # Configuración S3
@@ -62,7 +63,7 @@ COUNTRY_CURRENCY = {
 # ---------------------------------------------------------------------------
 
 def s3_client():
-    return boto3.client("s3", verify=False)
+    return aws_client.s3()
 
 def leer_csv_s3(bucket: str, key: str) -> pd.DataFrame:
     print(f"  [S3 GET] {key}")

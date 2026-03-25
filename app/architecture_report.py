@@ -10,14 +10,14 @@ Uso:
 """
 import argparse, io, json, os
 from datetime import datetime, timezone
-import boto3
+import aws_client
 
 DEFAULT_PREFIX = "bankdemo"
 REPORTS_DIR    = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "reports")
 
 
 def _s3():
-    return boto3.client("s3", verify=False)
+    return aws_client.s3()
 
 def _get_json(bucket, key):
     print(f"  [GET] {key}")

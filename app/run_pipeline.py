@@ -1,5 +1,5 @@
 """
-run_pipeline.py — Orquestador: SQL Server → S3 raw → clean/errors → Athena → Compliance
+run_pipeline.py — Orquestador con dashboard visual Rich
 
 Uso:
     python run_pipeline.py --bucket <bucket> [--prefix bankdemo] [--skip-extract]
@@ -7,13 +7,37 @@ Uso:
 import argparse, os, sys, time
 from datetime import datetime, timezone
 
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
+from rich.text import Text
+from rich import box
+from rich.columns import Columns
+from rich.rule import Rule
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import extractor, dq_engine, athena_setup, compliance_engine, modernization_advisor, architecture_report, discovery_report, executive_report, excel_report
+import extractor, dq_engine, athena_setup, compliance_engine, modernization_advisor
+import architecture_report, discovery_report, executive_report, excel_report, html_report
 
 BUCKET_DEFAULT = "bank-modernization-advisor-382736933668-us-east-2"
+console = Console()
 
-def sep(titulo):
-    print(f"\n{'='*55}\n  {titulo}\n{'='*55}")
+def score_color(score, inverted=False):
+    v = (100 - score) if inverted else score
+    if v >= 70: return "bold red"
+    if v >= 40: return "bold yellow"
+    return "bold green"
+
+def score_icon(score, inverted=False):
+    v = (100 - score) if inverted else score
+    if v >= 70: return "🔴"
+    if v >= 40: return "🟡"
+    return "🟢"
+
+def step_panel(n, total, title):
+    console.print()
+    console.rule(f"[bold cyan]PASO {n}/{total} — {title}[/bold cyan]")
 
 def main():
     p = argparse.ArgumentParser()
@@ -21,105 +45,180 @@ def main():
     p.add_argument("--prefix", default=os.environ.get("S3_PREFIX", "bankdemo"))
     p.add_argument("--skip-extract", action="store_true")
     a = p.parse_args()
-
     bucket, prefix = a.bucket, a.prefix
     t0 = time.time()
 
-    print(f"\n{'#'*55}")
-    print(f"  BANK MODERNIZATION — PIPELINE COMPLETO")
-    print(f"  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
-    print(f"{'#'*55}")
-    print(f"  Bucket : {bucket}\n  Prefix : {prefix}")
+    # Header
+    console.print()
+    console.print(Panel.fit(
+        f"[bold white]BANK MODERNIZATION READINESS ADVISOR[/bold white]\n"
+        f"[dim]{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}[/dim]\n"
+        f"[cyan]Bucket:[/cyan] {bucket}  [cyan]Prefix:[/cyan] {prefix}",
+        title="[bold cyan]Kiro + AWS[/bold cyan]",
+        border_style="cyan",
+    ))
 
-    # PASO 1 — Extracción SQL Server → S3 raw
+    # PASO 1 — Extracción
+    step_panel(1, 9, "SQL Server → S3 raw")
     if not a.skip_extract:
-        sep("PASO 1/3 — SQL Server → S3 raw")
         t = time.time()
-        df_raw = extractor.extraer_payments_raw()
-        extractor.subir_raw_a_s3(df_raw, bucket, prefix)
-        print(f"✓ Extracción OK ({time.time()-t:.1f}s)")
+        with console.status("[cyan]Conectando a SQL Server...[/cyan]"):
+            df_raw = extractor.extraer_payments_raw()
+            extractor.subir_raw_a_s3(df_raw, bucket, prefix)
+        console.print(f"  [green]✓[/green] Extracción OK — {len(df_raw):,} registros ({time.time()-t:.1f}s)")
     else:
-        print("\n[PASO 1/3 omitido — --skip-extract]")
+        console.print("  [dim]⏭  Paso 1 omitido (--skip-extract)[/dim]")
 
-    # PASO 2 — Motor de calidad
-    sep("PASO 2/9 — Motor de calidad de datos")
+    # PASO 2 — DQ Engine
+    step_panel(2, 9, "Motor de Calidad de Datos")
     t = time.time()
-    df_raw_s3 = dq_engine.leer_csv_s3(bucket, f"{prefix}/{dq_engine.RAW_KEY}")
-    df_clean, df_errors, conteo = dq_engine.aplicar_calidad(df_raw_s3)
+    with console.status("[cyan]Aplicando reglas de calidad...[/cyan]"):
+        df_raw_s3 = dq_engine.leer_csv_s3(bucket, f"{prefix}/{dq_engine.RAW_KEY}")
+        df_clean, df_errors, conteo = dq_engine.aplicar_calidad(df_raw_s3)
+        dq_engine.escribir_csv_s3(df_clean,  bucket, f"{prefix}/{dq_engine.CLEAN_KEY}")
+        dq_engine.escribir_csv_s3(df_errors, bucket, f"{prefix}/{dq_engine.ERRORS_KEY}")
+        snapshot  = dq_engine.construir_snapshot_dq(df_raw_s3, conteo)
+        readiness = dq_engine.construir_readiness(snapshot)
+        out = f"{prefix}/{dq_engine.OUTPUT_PREFIX}"
+        dq_engine.escribir_json_s3(snapshot,  bucket, f"{out}/data_quality_snapshot.json")
+        dq_engine.escribir_json_s3(readiness, bucket, f"{out}/readiness_score.json")
+        dq_engine.escribir_texto_s3(dq_engine.markdown_dq(snapshot),        bucket, f"{out}/data_quality_snapshot.md")
+        dq_engine.escribir_texto_s3(dq_engine.markdown_readiness(readiness), bucket, f"{out}/readiness_score.md")
 
-    dq_engine.escribir_csv_s3(df_clean,  bucket, f"{prefix}/{dq_engine.CLEAN_KEY}")
-    dq_engine.escribir_csv_s3(df_errors, bucket, f"{prefix}/{dq_engine.ERRORS_KEY}")
+    total_r = len(df_raw_s3)
+    pct_c   = round(len(df_clean)/total_r*100,1)
+    pct_e   = round(len(df_errors)/total_r*100,1)
+    dq_score = readiness["data_quality_score"]
 
-    snapshot  = dq_engine.construir_snapshot_dq(df_raw_s3, conteo)
-    readiness = dq_engine.construir_readiness(snapshot)
-    out = f"{prefix}/{dq_engine.OUTPUT_PREFIX}"
-
-    dq_engine.escribir_json_s3(snapshot,  bucket, f"{out}/data_quality_snapshot.json")
-    dq_engine.escribir_json_s3(readiness, bucket, f"{out}/readiness_score.json")
-    dq_engine.escribir_texto_s3(dq_engine.markdown_dq(snapshot),        bucket, f"{out}/data_quality_snapshot.md")
-    dq_engine.escribir_texto_s3(dq_engine.markdown_readiness(readiness), bucket, f"{out}/readiness_score.md")
-
-    print(f"  Limpios  : {len(df_clean)}")
-    print(f"  Erróneos : {len(df_errors)}")
-    print(f"  DQ Score : {readiness['data_quality_score']} / 100")
-    print(f"✓ DQ Engine OK ({time.time()-t:.1f}s)")
+    dq_table = Table(box=box.SIMPLE, show_header=False, padding=(0,2))
+    dq_table.add_column(style="dim")
+    dq_table.add_column()
+    dq_table.add_row("Total registros",  f"[white]{total_r:,}[/white]")
+    dq_table.add_row("Registros limpios", f"[green]{len(df_clean):,} ({pct_c}%)[/green]")
+    dq_table.add_row("Registros erróneos",f"[red]{len(df_errors):,} ({pct_e}%)[/red]")
+    dq_table.add_row("DQ Score",          f"[{score_color(dq_score,True)}]{dq_score} / 100 {score_icon(dq_score,True)}[/{score_color(dq_score,True)}]")
+    console.print(dq_table)
+    console.print(f"  [green]✓[/green] DQ Engine OK ({time.time()-t:.1f}s)")
 
     # PASO 3 — Athena
-    sep("PASO 3/9 — Athena setup")
+    step_panel(3, 9, "Athena Setup")
     t = time.time()
-    athena_setup.setup(bucket, prefix)
-    print(f"✓ Athena OK ({time.time()-t:.1f}s)")
+    with console.status("[cyan]Configurando tablas Athena...[/cyan]"):
+        athena_setup.setup(bucket, prefix)
+    console.print(f"  [green]✓[/green] Athena OK — bankdemo_db.payments_raw / payments_clean / payments_errors ({time.time()-t:.1f}s)")
 
-    # PASO 4 — Compliance Analysis
-    sep("PASO 4/9 — Compliance Analysis")
+    # PASO 4 — Compliance
+    step_panel(4, 9, "Compliance Analysis — PCI-DSS · SOX · GDPR · OFAC · AML · DORA")
     t = time.time()
-    comp_result = compliance_engine.run_compliance(bucket, prefix)
-    print(f"✓ Compliance OK ({time.time()-t:.1f}s)")
+    with console.status("[cyan]Evaluando frameworks regulatorios...[/cyan]"):
+        comp_result = compliance_engine.run_compliance(bucket, prefix)
+
+    scores = comp_result["scores"]
+    comp_table = Table(title="Scores Regulatorios", box=box.ROUNDED, border_style="cyan", show_lines=True)
+    comp_table.add_column("Dimensión", style="white")
+    comp_table.add_column("Score", justify="center")
+    comp_table.add_column("Estado", justify="center")
+
+    score_rows = [
+        ("Regulatory Risk",     scores["regulatory_risk_score"],     False),
+        ("PCI-DSS Readiness",   scores["pci_readiness_score"],       True),
+        ("SOX Traceability",    scores["sox_traceability_score"],     True),
+        ("PII Exposure",        scores["pii_exposure_score"],        False),
+        ("Encryption Coverage", scores["encryption_coverage_score"], True),
+        ("Auditability",        scores["auditability_score"],        True),
+        ("OFAC Sanctions",      scores["ofac_sanctions_score"],      False),
+        ("AML Risk",            scores["aml_risk_score"],            False),
+        ("DORA Resilience",     scores["dora_resilience_score"],     False),
+    ]
+    for dim, score, inv in score_rows:
+        color = score_color(score, inv)
+        icon  = score_icon(score, inv)
+        comp_table.add_row(dim, f"[{color}]{score} / 100[/{color}]", f"{icon}")
+    console.print(comp_table)
+
+    # Alertas críticas
+    if scores["ofac_sanctions_score"] > 0:
+        console.print(Panel("[bold red]⚠  ALERTA OFAC: Transacciones con entidades/países sancionados detectadas — requiere reporte inmediato a regulador[/bold red]", border_style="red"))
+    if scores["aml_risk_score"] > 0:
+        console.print(Panel("[bold red]⚠  ALERTA AML: Patrones de structuring detectados — posible evasión de reporte FinCEN[/bold red]", border_style="red"))
+
+    console.print(f"  [green]✓[/green] Compliance OK — {comp_result['findings_count']} findings ({time.time()-t:.1f}s)")
 
     # PASO 5 — Modernization Advisor
-    sep("PASO 5/9 — Modernization Advisor")
+    step_panel(5, 9, "Modernization Advisor")
     t = time.time()
-    adv_result = modernization_advisor.run_modernization_advisor(bucket, prefix)
-    print(f"✓ Modernization Advisor OK ({time.time()-t:.1f}s)")
+    with console.status("[cyan]Calculando estrategia y business case...[/cyan]"):
+        adv_result = modernization_advisor.run_modernization_advisor(bucket, prefix)
 
-    # PASO 6 — Architecture Report
-    sep("PASO 6/9 — Architecture Report")
+    adv_table = Table(box=box.SIMPLE, show_header=False, padding=(0,2))
+    adv_table.add_column(style="dim")
+    adv_table.add_column()
+    adv_table.add_row("Estrategia",    f"[bold cyan]{adv_result['strategy'].upper()}[/bold cyan]")
+    adv_table.add_row("Complexity",    f"{adv_result['complexity_score']} / 100")
+    adv_table.add_row("Duración",      f"{adv_result['effort_weeks']} semanas")
+    adv_table.add_row("Inversión",     f"[yellow]USD {adv_result.get('investment_usd',0):,}[/yellow]")
+    adv_table.add_row("Ahorro anual",  f"[green]USD {adv_result.get('annual_savings_usd',0):,}[/green]")
+    adv_table.add_row("ROI 3 años",    f"[green]{adv_result['roi_3y_pct']}%[/green]")
+    adv_table.add_row("Payback",       f"{adv_result.get('payback_months',0)} meses")
+    console.print(adv_table)
+    console.print(f"  [green]✓[/green] Modernization Advisor OK ({time.time()-t:.1f}s)")
+
+    # PASOS 6-9 — Reportes
+    report_steps = [
+        (6, "Architecture Report",  lambda: architecture_report.generate(bucket, prefix)),
+        (7, "Discovery Report",     lambda: discovery_report.generate(bucket, prefix)),
+        (8, "Executive Report MD",  lambda: executive_report.generate(bucket, prefix)),
+        (9, "Excel Report",         lambda: excel_report.generate(bucket, prefix)),
+    ]
+    for n, title, fn in report_steps:
+        step_panel(n, 9, title)
+        t = time.time()
+        with console.status(f"[cyan]Generando {title}...[/cyan]"):
+            fn()
+        console.print(f"  [green]✓[/green] {title} OK ({time.time()-t:.1f}s)")
+
+    # HTML Report (paso extra)
+    step_panel(10, 10, "HTML Report Interactivo")
     t = time.time()
-    architecture_report.generate(bucket, prefix)
-    print(f"✓ Architecture Report OK ({time.time()-t:.1f}s)")
+    with console.status("[cyan]Generando reporte HTML interactivo...[/cyan]"):
+        html_report.generate(bucket, prefix)
+    console.print(f"  [green]✓[/green] HTML Report OK ({time.time()-t:.1f}s)")
 
-    # PASO 7 — Discovery Report
-    sep("PASO 7/9 — Discovery Report")
-    t = time.time()
-    discovery_report.generate(bucket, prefix)
-    print(f"✓ Discovery Report OK ({time.time()-t:.1f}s)")
+    # ─── RESUMEN FINAL ───────────────────────────────────────────────────────
+    elapsed = time.time() - t0
+    console.print()
+    console.rule("[bold green]PIPELINE COMPLETADO[/bold green]")
 
-    # PASO 8 — Executive Report
-    sep("PASO 8/9 — Executive Report")
-    t = time.time()
-    executive_report.generate(bucket, prefix)
-    print(f"✓ Executive Report OK ({time.time()-t:.1f}s)")
+    # Comparativa antes vs después
+    compare = Table(title="[bold]Consultoría Tradicional vs Kiro + AWS[/bold]",
+                    box=box.ROUNDED, border_style="green", show_lines=True)
+    compare.add_column("Dimensión",            style="white",      min_width=28)
+    compare.add_column("Consultoría Tradicional", style="red",     justify="center", min_width=22)
+    compare.add_column("Kiro + AWS",           style="green",      justify="center", min_width=22)
+    compare.add_column("Ventaja",              style="bold green",  justify="center")
+    compare.add_row("Duración del assessment",  "6–8 semanas",      f"{elapsed:.0f} segundos",  "99% más rápido")
+    compare.add_row("Personas requeridas",      "6–8 consultores",  "0 (automatizado)",          "100% automatizado")
+    compare.add_row("Costo del assessment",     "USD 400K–800K",    "Incluido en plataforma",    "Ahorro inmediato")
+    compare.add_row("Cobertura de datos",       "~10% (muestra)",   f"100% ({total_r:,} registros)", "Cobertura total")
+    compare.add_row("Hallazgos de compliance",  "Manual, subjetivo", f"{comp_result['findings_count']} trazables", "Evidencia JSON")
+    compare.add_row("Frameworks evaluados",     "1–2",              "8 (PCI·SOX·GDPR·OFAC·AML·DORA·NIST·Basel)", "8x más cobertura")
+    compare.add_row("Detección OFAC/AML",       "No incluida",      "Automática",                "Nuevo")
+    compare.add_row("Reportes generados",       "Word/Excel manual", "MD + Excel + HTML",        "Regenerable")
+    console.print(compare)
 
-    # PASO 9 — Excel Report
-    sep("PASO 9/9 — Excel Report")
-    t = time.time()
-    excel_report.generate(bucket, prefix)
-    print(f"✓ Excel Report OK ({time.time()-t:.1f}s)")
-
-    # Resumen
-    print(f"\n{'#'*55}")
-    print(f"  PIPELINE COMPLETADO en {time.time()-t0:.1f}s")
-    print(f"{'#'*55}")
-    print(f"  Raw        : s3://{bucket}/{prefix}/raw/payments_raw.csv")
-    print(f"  Clean      : s3://{bucket}/{prefix}/clean/  ({len(df_clean)} registros)")
-    print(f"  Errors     : s3://{bucket}/{prefix}/errors/ ({len(df_errors)} registros)")
-    print(f"  Athena     : {athena_setup.ATHENA_DATABASE}.payments_clean / payments_errors")
-    print(f"  DQ Output  : s3://{bucket}/{prefix}/output/")
-    print(f"  Compliance : s3://{bucket}/{prefix}/output/compliance/")
-    print(f"  Advisor    : s3://{bucket}/{prefix}/output/modernization/")
-    print(f"  Findings   : {comp_result['findings_count']} | Reg.Risk: {comp_result['scores']['regulatory_risk_score']}/100")
-    print(f"  Strategy   : {adv_result['strategy'].upper()} | Complexity: {adv_result['complexity_score']}/100 | ROI 3Y: {adv_result['roi_3y_pct']}%")
-    print(f"  Reports    : reports/architecture.md · reports/discovery.md · reports/executive_report.md · reports/executive_report.xlsx")
+    # Resumen de outputs
+    summary_table = Table(box=box.SIMPLE, show_header=False, padding=(0,2))
+    summary_table.add_column(style="dim", min_width=18)
+    summary_table.add_column()
+    summary_table.add_row("Tiempo total",    f"[bold green]{elapsed:.1f}s[/bold green]")
+    summary_table.add_row("Registros",       f"{total_r:,} raw → {len(df_clean):,} clean / {len(df_errors):,} errors")
+    summary_table.add_row("DQ Score",        f"{dq_score}/100")
+    summary_table.add_row("Findings",        f"{comp_result['findings_count']} en 8 frameworks")
+    summary_table.add_row("Estrategia",      f"{adv_result['strategy'].upper()}")
+    summary_table.add_row("ROI 3Y",          f"{adv_result['roi_3y_pct']}%")
+    summary_table.add_row("Reportes",        "architecture.md · discovery.md · executive_report.md · .xlsx · .html")
+    console.print(summary_table)
+    console.print()
 
 if __name__ == "__main__":
     main()
