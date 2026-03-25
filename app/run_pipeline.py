@@ -23,6 +23,18 @@ import architecture_report, discovery_report, executive_report, excel_report, ht
 BUCKET_DEFAULT = "bank-modernization-advisor-382736933668-us-east-2"
 console = Console()
 
+def _limpiar_s3(bucket, prefix):
+    """Borra todos los objetos bajo el prefix antes de cada run."""
+    s3 = __import__("aws_client").s3()
+    paginator = s3.get_paginator("list_objects_v2")
+    deleted = 0
+    for page in paginator.paginate(Bucket=bucket, Prefix=f"{prefix}/"):
+        objects = [{"Key": o["Key"]} for o in page.get("Contents", [])]
+        if objects:
+            s3.delete_objects(Bucket=bucket, Delete={"Objects": objects})
+            deleted += len(objects)
+    return deleted
+
 def score_color(score, inverted=False):
     v = (100 - score) if inverted else score
     if v >= 70: return "bold red"
@@ -43,7 +55,6 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--bucket", default=os.environ.get("S3_BUCKET", BUCKET_DEFAULT))
     p.add_argument("--prefix", default=os.environ.get("S3_PREFIX", "bankdemo"))
-    p.add_argument("--skip-extract", action="store_true")
     a = p.parse_args()
     bucket, prefix = a.bucket, a.prefix
     t0 = time.time()
@@ -58,16 +69,23 @@ def main():
         border_style="cyan",
     ))
 
-    # PASO 1 — Extracción
+    # Limpieza S3 + Athena antes de cada run
+    console.rule("[bold yellow]Limpieza previa — S3 + Athena[/bold yellow]")
+    with console.status("[yellow]Borrando datos anteriores en S3...[/yellow]"):
+        deleted = _limpiar_s3(bucket, prefix)
+    console.print(f"  [yellow]✓[/yellow] S3 limpio — {deleted} objetos eliminados")
+
+    with console.status("[yellow]Recreando tablas Athena...[/yellow]"):
+        athena_setup.drop_all(bucket, prefix)
+    console.print(f"  [yellow]✓[/yellow] Tablas Athena eliminadas — se recrearán en Paso 3")
+
+    # PASO 1 — Extracción desde SQL Server (siempre)
     step_panel(1, 9, "SQL Server → S3 raw")
-    if not a.skip_extract:
-        t = time.time()
-        with console.status("[cyan]Conectando a SQL Server...[/cyan]"):
-            df_raw = extractor.extraer_payments_raw()
-            extractor.subir_raw_a_s3(df_raw, bucket, prefix)
-        console.print(f"  [green]✓[/green] Extracción OK — {len(df_raw):,} registros ({time.time()-t:.1f}s)")
-    else:
-        console.print("  [dim]⏭  Paso 1 omitido (--skip-extract)[/dim]")
+    t = time.time()
+    with console.status("[cyan]Conectando a SQL Server y extrayendo bank_payments_demo...[/cyan]"):
+        df_raw = extractor.extraer_payments_raw()
+        extractor.subir_raw_a_s3(df_raw, bucket, prefix)
+    console.print(f"  [green]✓[/green] Extracción OK — {len(df_raw):,} registros ({time.time()-t:.1f}s)")
 
     # PASO 2 — DQ Engine
     step_panel(2, 9, "Motor de Calidad de Datos")
@@ -199,7 +217,7 @@ def main():
     compare.add_row("Duración del assessment",  "6–8 semanas",      f"{elapsed:.0f} segundos",  "99% más rápido")
     compare.add_row("Personas requeridas",      "6–8 consultores",  "0 (automatizado)",          "100% automatizado")
     compare.add_row("Costo del assessment",     "USD 400K–800K",    "Incluido en plataforma",    "Ahorro inmediato")
-    compare.add_row("Cobertura de datos",       "~10% (muestra)",   f"100% ({total_r:,} registros)", "Cobertura total")
+    compare.add_row("Cobertura de datos",       "~10% (muestra)",   f"100% ({len(df_raw):,} registros)", "Cobertura total")
     compare.add_row("Hallazgos de compliance",  "Manual, subjetivo", f"{comp_result['findings_count']} trazables", "Evidencia JSON")
     compare.add_row("Frameworks evaluados",     "1–2",              "8 (PCI·SOX·GDPR·OFAC·AML·DORA·NIST·Basel)", "8x más cobertura")
     compare.add_row("Detección OFAC/AML",       "No incluida",      "Automática",                "Nuevo")

@@ -46,26 +46,38 @@ def conectar_sql() -> pyodbc.Connection:
 
 
 def extraer_payments_raw() -> pd.DataFrame:
-    """Lee toda la tabla payments_raw desde SQL Server."""
+    """Lee toda la tabla bank_payments_demo desde SQL Server."""
     conn = conectar_sql()
+    # Mapea columnas reales de bank_payments_demo a los nombres estándar del pipeline
     query = """
         SELECT
             payment_id,
-            customer_name,
-            customer_email,
+            full_name        AS customer_name,
+            email            AS customer_email,
             amount,
             currency_code,
-            status,
-            country_code,
+            status_code      AS status,
+            origin_country   AS country_code,
             created_at,
-            updated_at,
-            source_system
+            created_at       AS updated_at,
+            source_system,
+            sanction_flag_expected,
+            duplicate_group_id,
+            structuring_cluster_id,
+            swift_bic,
+            iban,
+            beneficiary_country,
+            beneficiary_name,
+            masked_card,
+            data_quality_score  AS source_dq_score,
+            source_quality_note,
+            raw_reference
         FROM bank_payments_demo
     """
     print("  Extrayendo bank_payments_demo...")
     df = pd.read_sql(query, conn)
     conn.close()
-    print(f"  {len(df)} registros extraídos.")
+    print(f"  {len(df):,} registros extraídos.")
     return df
 
 

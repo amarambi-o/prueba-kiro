@@ -11,7 +11,10 @@ WORKGROUP       = "primary"
 BASE_COLUMNS = (
     "payment_id STRING, customer_name STRING, customer_email STRING, "
     "amount STRING, currency_code STRING, status STRING, "
-    "country_code STRING, created_at STRING, updated_at STRING, source_system STRING"
+    "country_code STRING, created_at STRING, updated_at STRING, source_system STRING, "
+    "sanction_flag_expected STRING, duplicate_group_id STRING, structuring_cluster_id STRING, "
+    "swift_bic STRING, iban STRING, beneficiary_country STRING, beneficiary_name STRING, "
+    "masked_card STRING, source_dq_score STRING, source_quality_note STRING, raw_reference STRING"
 )
 
 def athena_client():
@@ -58,6 +61,16 @@ def table_exists(athena, tabla, output):
     except Exception:
         return False
 
+def drop_all(bucket, prefix):
+    """Elimina todas las tablas del pipeline para forzar recreación limpia."""
+    athena = athena_client()
+    out = f"s3://{bucket}/athena-results/"
+    for tabla in ["bank_payments_demo", "payments_clean", "payments_errors"]:
+        try:
+            run_query(athena, f"DROP TABLE IF EXISTS {ATHENA_DATABASE}.{tabla}", out, f"DROP {tabla}")
+        except Exception:
+            pass  # si no existe, ignorar
+
 def setup(bucket, prefix):
     athena = athena_client()
     out = f"s3://{bucket}/athena-results/"
@@ -69,11 +82,6 @@ def setup(bucket, prefix):
         ("payments_clean",     "",                   "clean"),
         ("payments_errors",    ", dq_errors STRING", "errors"),
     ]:
-        if table_exists(athena, tabla, out):
-            print(f"  ✓ {tabla} ya existe — omitiendo creación")
-            continue
-
-        print(f"  ⚠ {tabla} no existe — creando...")
         ddl = f"""CREATE EXTERNAL TABLE {ATHENA_DATABASE}.{tabla} ({BASE_COLUMNS}{extra_col})
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'
 STORED AS TEXTFILE
