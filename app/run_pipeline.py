@@ -8,7 +8,7 @@ import argparse, os, sys, time
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import extractor, dq_engine, athena_setup, compliance_engine, modernization_advisor, architecture_report, discovery_report, executive_report
+import extractor, dq_engine, athena_setup, compliance_engine, modernization_advisor, architecture_report, discovery_report, executive_report, excel_report
 
 BUCKET_DEFAULT = "bank-modernization-advisor-382736933668-us-east-2"
 
@@ -42,7 +42,7 @@ def main():
         print("\n[PASO 1/3 omitido — --skip-extract]")
 
     # PASO 2 — Motor de calidad
-    sep("PASO 2/4 — Motor de calidad de datos")
+    sep("PASO 2/9 — Motor de calidad de datos")
     t = time.time()
     df_raw_s3 = dq_engine.leer_csv_s3(bucket, f"{prefix}/{dq_engine.RAW_KEY}")
     df_clean, df_errors, conteo = dq_engine.aplicar_calidad(df_raw_s3)
@@ -65,40 +65,46 @@ def main():
     print(f"✓ DQ Engine OK ({time.time()-t:.1f}s)")
 
     # PASO 3 — Athena
-    sep("PASO 3/5 — Athena setup")
+    sep("PASO 3/9 — Athena setup")
     t = time.time()
     athena_setup.setup(bucket, prefix)
     print(f"✓ Athena OK ({time.time()-t:.1f}s)")
 
     # PASO 4 — Compliance Analysis
-    sep("PASO 4/5 — Compliance Analysis")
+    sep("PASO 4/9 — Compliance Analysis")
     t = time.time()
     comp_result = compliance_engine.run_compliance(bucket, prefix)
     print(f"✓ Compliance OK ({time.time()-t:.1f}s)")
 
     # PASO 5 — Modernization Advisor
-    sep("PASO 5/7 — Modernization Advisor")
+    sep("PASO 5/9 — Modernization Advisor")
     t = time.time()
     adv_result = modernization_advisor.run_modernization_advisor(bucket, prefix)
     print(f"✓ Modernization Advisor OK ({time.time()-t:.1f}s)")
 
     # PASO 6 — Architecture Report
-    sep("PASO 6/8 — Architecture Report")
+    sep("PASO 6/9 — Architecture Report")
     t = time.time()
     architecture_report.generate(bucket, prefix)
     print(f"✓ Architecture Report OK ({time.time()-t:.1f}s)")
 
     # PASO 7 — Discovery Report
-    sep("PASO 7/8 — Discovery Report")
+    sep("PASO 7/9 — Discovery Report")
     t = time.time()
     discovery_report.generate(bucket, prefix)
     print(f"✓ Discovery Report OK ({time.time()-t:.1f}s)")
 
     # PASO 8 — Executive Report
-    sep("PASO 8/8 — Executive Report")
+    sep("PASO 8/9 — Executive Report")
     t = time.time()
     executive_report.generate(bucket, prefix)
     print(f"✓ Executive Report OK ({time.time()-t:.1f}s)")
+
+    # PASO 9 — Excel Report
+    sep("PASO 9/9 — Excel Report")
+    t = time.time()
+    excel_report.generate(bucket, prefix)
+    print(f"✓ Excel Report OK ({time.time()-t:.1f}s)")
 
     # Resumen
     print(f"\n{'#'*55}")
@@ -113,7 +119,7 @@ def main():
     print(f"  Advisor    : s3://{bucket}/{prefix}/output/modernization/")
     print(f"  Findings   : {comp_result['findings_count']} | Reg.Risk: {comp_result['scores']['regulatory_risk_score']}/100")
     print(f"  Strategy   : {adv_result['strategy'].upper()} | Complexity: {adv_result['complexity_score']}/100 | ROI 3Y: {adv_result['roi_3y_pct']}%")
-    print(f"  Reports    : reports/architecture.md · reports/discovery.md · reports/executive_report.md")
+    print(f"  Reports    : reports/architecture.md · reports/discovery.md · reports/executive_report.md · reports/executive_report.xlsx")
 
 if __name__ == "__main__":
     main()

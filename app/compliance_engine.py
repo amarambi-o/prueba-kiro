@@ -34,6 +34,7 @@ from typing import Any, Dict, List
 
 import boto3
 import pandas as pd
+import aws_client
 
 # ---------------------------------------------------------------------------
 # S3 keys
@@ -59,7 +60,7 @@ PII_FIELDS       = ["customer_name", "customer_email"]
 # ---------------------------------------------------------------------------
 
 def _s3():
-    return boto3.client("s3", verify=False)
+    return aws_client.s3()
 
 
 def _get_csv(bucket: str, key: str) -> pd.DataFrame:
