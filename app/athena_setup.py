@@ -65,9 +65,9 @@ def setup(bucket, prefix):
     run_query(athena, f"CREATE DATABASE IF NOT EXISTS {ATHENA_DATABASE}", out, "CREATE DATABASE")
 
     for tabla, extra_col, zona in [
-        ("payments_raw",    "",                   "raw"),
-        ("payments_clean",  "",                   "clean"),
-        ("payments_errors", ", dq_errors STRING", "errors"),
+        ("bank_payments_demo", "",                   "raw"),
+        ("payments_clean",     "",                   "clean"),
+        ("payments_errors",    ", dq_errors STRING", "errors"),
     ]:
         if table_exists(athena, tabla, out):
             print(f"  ✓ {tabla} ya existe — omitiendo creación")
@@ -82,7 +82,7 @@ TBLPROPERTIES ('skip.header.line.count'='1')"""
         run_query(athena, ddl, out, f"CREATE {tabla}")
         print(f"    → s3://{bucket}/{prefix}/{zona}/")
 
-    print(f"\n✓ Athena setup OK — {ATHENA_DATABASE}.payments_raw / payments_clean / payments_errors")
+    print(f"\n✓ Athena setup OK — {ATHENA_DATABASE}.bank_payments_demo / payments_clean / payments_errors")
 
 def main():
     p = argparse.ArgumentParser()

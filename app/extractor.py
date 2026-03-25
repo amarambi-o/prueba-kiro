@@ -30,7 +30,7 @@ DRIVER   = os.environ.get("SQL_DRIVER",   "ODBC Driver 17 for SQL Server")
 # Configuración S3
 # ---------------------------------------------------------------------------
 DEFAULT_PREFIX = "bankdemo"
-RAW_KEY        = "raw/payments_raw.csv"
+RAW_KEY        = "raw/bank_payments_demo.csv"
 
 
 def conectar_sql() -> pyodbc.Connection:
@@ -60,9 +60,9 @@ def extraer_payments_raw() -> pd.DataFrame:
             created_at,
             updated_at,
             source_system
-        FROM payments_raw
+        FROM bank_payments_demo
     """
-    print("  Extrayendo payments_raw...")
+    print("  Extrayendo bank_payments_demo...")
     df = pd.read_sql(query, conn)
     conn.close()
     print(f"  {len(df)} registros extraídos.")

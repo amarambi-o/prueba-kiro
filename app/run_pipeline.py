@@ -105,7 +105,7 @@ def main():
     t = time.time()
     with console.status("[cyan]Configurando tablas Athena...[/cyan]"):
         athena_setup.setup(bucket, prefix)
-    console.print(f"  [green]✓[/green] Athena OK — bankdemo_db.payments_raw / payments_clean / payments_errors ({time.time()-t:.1f}s)")
+    console.print(f"  [green]✓[/green] Athena OK — bankdemo_db.bank_payments_demo / payments_clean / payments_errors ({time.time()-t:.1f}s)")
 
     # PASO 4 — Compliance
     step_panel(4, 9, "Compliance Analysis — PCI-DSS · SOX · GDPR · OFAC · AML · DORA")

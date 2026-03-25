@@ -32,7 +32,7 @@ import aws_client
 # Configuración S3
 # ---------------------------------------------------------------------------
 DEFAULT_PREFIX = "bankdemo"
-RAW_KEY        = "raw/payments_raw.csv"
+RAW_KEY        = "raw/bank_payments_demo.csv"
 CLEAN_KEY      = "clean/payments_clean.csv"
 ERRORS_KEY     = "errors/payments_errors.csv"
 OUTPUT_PREFIX  = "output"
@@ -273,7 +273,7 @@ def construir_snapshot_dq(df_raw: pd.DataFrame, conteo: Dict[str, int]) -> Dict:
                           for r in REGLAS_CRITICAL)
         reglas_detalle.append({
             "rule_name":      k,
-            "target_table":   "payments_raw",
+            "target_table":   "bank_payments_demo",
             "failed_records": v,
             "severity":       "Alta" if es_critical else "Media",
             "status":         "FAIL" if v > 0 else "PASS",
@@ -282,7 +282,7 @@ def construir_snapshot_dq(df_raw: pd.DataFrame, conteo: Dict[str, int]) -> Dict:
 
     return {
         "summary": {
-            "target_table":    "payments_raw",
+            "target_table":    "bank_payments_demo",
             "total_records":   len(df_raw),
             "total_rules":     len(REGLAS),
             "failed_rules":    failed_rules,

@@ -247,7 +247,7 @@ df = pd.DataFrame(rows[:N])
 buf = io.StringIO()
 df.to_csv(buf, index=False)
 s3  = aws_client.s3()
-key = f"{PREFIX}/raw/payments_raw.csv"
+key = f"{PREFIX}/raw/bank_payments_demo.csv"
 s3.put_object(Bucket=BUCKET, Key=key, Body=buf.getvalue().encode("utf-8"), ContentType="text/csv")
 
 # Stats para la demo
