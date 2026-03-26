@@ -28,7 +28,7 @@ from typing import Any, Dict
 
 import boto3
 
-DEFAULT_PREFIX  = "bankdemo"
+DEFAULT_PREFIX  = "bank-modernization-kiro"
 OUTPUT_DIR      = "output/modernization"
 COMPLIANCE_DIR  = "output/compliance"
 OUTPUT_PREFIX   = "output"
@@ -41,10 +41,19 @@ OUTPUT_PREFIX   = "output"
 def _s3():
     return boto3.client("s3", verify=False)
 
-def _get_json(bucket: str, key: str) -> Dict:
+def _get_json(bucket: str, key: str, retries: int = 3) -> Dict:
     print(f"  [GET] {key}")
-    obj = _s3().get_object(Bucket=bucket, Key=key)
-    return json.loads(obj["Body"].read())
+    import time
+    for attempt in range(1, retries + 1):
+        try:
+            obj = _s3().get_object(Bucket=bucket, Key=key)
+            return json.loads(obj["Body"].read())
+        except Exception as e:
+            if attempt < retries:
+                print(f"  Reintento {attempt}/{retries} — {e}")
+                time.sleep(2 * attempt)
+            else:
+                raise
 
 def _put_json(data: Any, bucket: str, key: str) -> None:
     _s3().put_object(

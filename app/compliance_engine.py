@@ -11,16 +11,8 @@ simulates a financial regulatory assessment, and produces:
     audit_evidence.json       — per-record evidence for audit trail
     executive_summary.md      — C-level narrative with AWS architecture
 
-Scoring dimensions:
-  - regulatory_risk_score     (composite — lower is better)
-  - pci_readiness_score       (higher is better)
-  - sox_traceability_score    (higher is better)
-  - pii_exposure_score        (risk — higher means more exposure)
-  - encryption_coverage_score (higher is better)
-  - auditability_score        (higher is better)
-
-Usage:
-    python compliance_engine.py --bucket <bucket> [--prefix bankdemo]
+Uso:
+    python compliance_engine.py --bucket bank-modernization-kiro
 
 Requires: boto3, pandas
 """
@@ -38,10 +30,10 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 # S3 keys
 # ---------------------------------------------------------------------------
-DEFAULT_PREFIX   = "bankdemo"
+DEFAULT_PREFIX   = "bank-modernization-kiro"
 CLEAN_KEY        = "clean/payments_clean.csv"
 ERRORS_KEY       = "errors/payments_errors.csv"
-OUTPUT_PREFIX    = "output"
+OUTPUT_PREFIX    = "output/payments"
 COMPLIANCE_DIR   = "output/compliance"
 
 # Plaintext fields that should be encrypted at rest in a regulated environment
@@ -68,10 +60,19 @@ def _get_csv(bucket: str, key: str) -> pd.DataFrame:
     return pd.read_csv(io.BytesIO(obj["Body"].read()), dtype=str)
 
 
-def _get_json(bucket: str, key: str) -> Dict:
+def _get_json(bucket: str, key: str, retries: int = 3) -> Dict:
     print(f"  [GET] {key}")
-    obj = _s3().get_object(Bucket=bucket, Key=key)
-    return json.loads(obj["Body"].read())
+    import time
+    for attempt in range(1, retries + 1):
+        try:
+            obj = _s3().get_object(Bucket=bucket, Key=key)
+            return json.loads(obj["Body"].read())
+        except Exception as e:
+            if attempt < retries:
+                print(f"  Reintento {attempt}/{retries} — {e}")
+                time.sleep(2 * attempt)
+            else:
+                raise
 
 
 def _put_json(data: Any, bucket: str, key: str) -> None:

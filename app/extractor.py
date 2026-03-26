@@ -2,19 +2,15 @@
 extractor.py
 Bank Modernization — Paso 1: Extracción desde SQL Server legacy a S3
 
-Lee la tabla payments_raw directamente desde SQL Server on-premise
-y la sube a S3 en la zona raw, sin ninguna transformación.
+Lee las tablas desde SQL Server y las sube a S3 en la zona raw.
 
 Uso:
-    python extractor.py --bucket <bucket> [--prefix bankdemo]
+    python extractor.py --bucket bank-modernization-kiro
 
 Requiere: pyodbc, boto3, pandas
 """
 
-import argparse
-import io
-import os
-
+import argparse, io, os
 import boto3
 import pandas as pd
 import pyodbc
@@ -22,93 +18,87 @@ import pyodbc
 # ---------------------------------------------------------------------------
 # Configuración SQL Server
 # ---------------------------------------------------------------------------
-SERVER   = os.environ.get("SQL_SERVER",   "NTTD-HHM6P74")
-DATABASE = os.environ.get("SQL_DATABASE", "BankDemo")
+SERVER   = os.environ.get("SQL_SERVER",   "(local)")
+DATABASE = os.environ.get("SQL_DATABASE", "demo")
 DRIVER   = os.environ.get("SQL_DRIVER",   "ODBC Driver 17 for SQL Server")
 
-# ---------------------------------------------------------------------------
-# Configuración S3
-# ---------------------------------------------------------------------------
-DEFAULT_PREFIX = "bankdemo"
+DEFAULT_PREFIX = "bank-modernization-kiro"
 RAW_KEY        = "raw/payments_raw.csv"
+
+# Tablas a extraer: nombre_sql → nombre_archivo
+TABLAS = {
+    "payments_raw":      "payments_raw",
+    "transfers_raw":     "transfers_raw",
+    "fraud_alerts_raw":  "fraud_alerts_raw",
+}
 
 
 def conectar_sql() -> pyodbc.Connection:
     conn_str = (
-        f"DRIVER={{{DRIVER}}};"
-        f"SERVER={SERVER};"
-        f"DATABASE={DATABASE};"
-        "Trusted_Connection=yes;"
-        "TrustServerCertificate=yes;"
+        f"DRIVER={{{DRIVER}}};SERVER={SERVER};DATABASE={DATABASE};"
+        "Trusted_Connection=yes;TrustServerCertificate=yes;"
     )
     print(f"  Conectando a SQL Server: {SERVER}/{DATABASE}")
     return pyodbc.connect(conn_str)
 
 
-def extraer_payments_raw() -> pd.DataFrame:
-    """Lee toda la tabla payments_raw desde SQL Server."""
-    conn = conectar_sql()
-    query = """
-        SELECT
-            payment_id,
-            customer_name,
-            customer_email,
-            amount,
-            currency_code,
-            status,
-            country_code,
-            created_at,
-            updated_at,
-            source_system
-        FROM payments_raw
-    """
-    print("  Extrayendo payments_raw...")
-    df = pd.read_sql(query, conn)
-    conn.close()
-    print(f"  {len(df)} registros extraídos.")
+def extraer_tabla(conn: pyodbc.Connection, tabla: str) -> pd.DataFrame:
+    print(f"  Extrayendo {tabla}...")
+    df = pd.read_sql(f"SELECT * FROM dbo.{tabla}", conn)
+    print(f"  {len(df):,} registros extraídos de {tabla}.")
     return df
 
 
-def subir_raw_a_s3(df: pd.DataFrame, bucket: str, prefix: str) -> str:
-    """Sube el DataFrame como CSV a la zona raw en S3."""
-    key = f"{prefix}/{RAW_KEY}"
-    s3  = boto3.client("s3", verify=False)
+def extraer_payments_raw() -> pd.DataFrame:
+    """Compatibilidad con pipeline original — extrae solo payments_raw."""
+    conn = conectar_sql()
+    df = extraer_tabla(conn, "payments_raw")
+    conn.close()
+    return df
 
-    buffer = io.StringIO()
-    df.to_csv(buffer, index=False)
 
-    s3.put_object(
-        Bucket=bucket,
-        Key=key,
-        Body=buffer.getvalue().encode("utf-8"),
-        ContentType="text/csv",
-    )
+def subir_csv_s3(df: pd.DataFrame, bucket: str, key: str) -> None:
+    s3 = boto3.client("s3", verify=False)
+    buf = io.StringIO()
+    df.to_csv(buf, index=False)
+    s3.put_object(Bucket=bucket, Key=key,
+                  Body=buf.getvalue().encode("utf-8"), ContentType="text/csv")
     print(f"  → s3://{bucket}/{key}")
+
+
+def subir_raw_a_s3(df: pd.DataFrame, bucket: str, prefix: str) -> str:
+    """Compatibilidad con pipeline original."""
+    key = f"{prefix}/{RAW_KEY}"
+    subir_csv_s3(df, bucket, key)
     return key
+
+
+def extraer_todas(bucket: str, prefix: str) -> dict:
+    """Extrae todas las tablas de SQL Server y las sube a S3 raw."""
+    conn = conectar_sql()
+    resultados = {}
+    for tabla, nombre in TABLAS.items():
+        df = extraer_tabla(conn, tabla)
+        key = f"{prefix}/raw/{nombre}.csv"
+        subir_csv_s3(df, bucket, key)
+        resultados[nombre] = df
+    conn.close()
+    return resultados
 
 
 def main():
     parser = argparse.ArgumentParser(description="Extractor SQL Server → S3 raw")
     parser.add_argument("--bucket", default=os.environ.get("S3_BUCKET", ""),
-                        required=not os.environ.get("S3_BUCKET"),
-                        help="Nombre del bucket S3")
+                        required=not os.environ.get("S3_BUCKET"))
     parser.add_argument("--prefix", default=os.environ.get("S3_PREFIX", DEFAULT_PREFIX))
     args = parser.parse_args()
 
     print("\n[EXTRACTOR] SQL Server → S3 raw")
     print("=" * 45)
-
-    df = extraer_payments_raw()
-
-    print(f"\n  Preview (primeras 3 filas):")
-    print(df.head(3).to_string(index=False))
-
-    print(f"\n  Subiendo a S3...")
-    subir_raw_a_s3(df, args.bucket, args.prefix)
-
+    resultados = extraer_todas(args.bucket, args.prefix)
     print(f"\n✓ Extracción completada.")
-    print(f"  Total registros en raw: {len(df)}")
-    print(f"  Destino: s3://{args.bucket}/{args.prefix}/{RAW_KEY}")
+    for nombre, df in resultados.items():
+        print(f"  {nombre}: {len(df):,} registros → s3://{args.bucket}/{args.prefix}/raw/{nombre}.csv")
 
 
 if __name__ == "__main__":
