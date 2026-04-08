@@ -26,7 +26,7 @@ import argparse, io, json, os
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-import boto3
+import aws_client
 
 DEFAULT_PREFIX  = "bankdemo"
 OUTPUT_DIR      = "output/modernization"
@@ -39,7 +39,7 @@ OUTPUT_PREFIX   = "output"
 # ---------------------------------------------------------------------------
 
 def _s3():
-    return boto3.client("s3", verify=False)
+    return aws_client.s3()
 
 def _get_json(bucket: str, key: str) -> Dict:
     print(f"  [GET] {key}")
