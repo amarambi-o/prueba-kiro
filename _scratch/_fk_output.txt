@@ -1,0 +1,185 @@
+﻿
+FK_JSON: [{"fk": "FK_signatory_account", "child_schema": "dbo", "child_table": "account_signatories", "child_col": "account_id", "parent_schema": "dbo", "parent_table": 
+"accounts_dim", "parent_col": "account_id"}, {"fk": "FK_signatory_customer", "child_schema": "dbo", "child_table": "account_signatories", "child_col": "customer_id", 
+"parent_schema": "dbo", "parent_table": "customers_dim", "parent_col": "customer_id"}, {"fk": "FK_accounts_bank", "child_schema": "dbo", "child_table": "accounts_dim", "child_col": 
+"bank_id", "parent_schema": "dbo", "parent_table": "banks_dim", "parent_col": "bank_id"}, {"fk": "FK_accounts_branch", "child_schema": "dbo", "child_table": "accounts_dim", 
+"child_col": "branch_id", "parent_schema": "dbo", "parent_table": "branches_dim", "parent_col": "branch_id"}, {"fk": "FK_accounts_currency", "child_schema": "dbo", "child_table": 
+"accounts_dim", "child_col": "currency_code", "parent_schema": "dbo", "parent_table": "currencies_dim", "parent_col": "currency_code"}, {"fk": "FK_accounts_customer", 
+"child_schema": "dbo", "child_table": "accounts_dim", "child_col": "customer_id", "parent_schema": "dbo", "parent_table": "customers_dim", "parent_col": "customer_id"}, {"fk": 
+"FK_accounts_product", "child_schema": "dbo", "child_table": "accounts_dim", "child_col": "product_id", "parent_schema": "dbo", "parent_table": "products_dim", "parent_col": 
+"product_id"}, {"fk": "FK_accounts_source", "child_schema": "dbo", "child_table": "accounts_dim", "child_col": "source_system", "parent_schema": "dbo", "parent_table": 
+"source_systems_dim", "parent_col": "source_system"}, {"fk": "FK_banks_country", "child_schema": "dbo", "child_table": "banks_dim", "child_col": "country_code", "parent_schema": 
+"dbo", "parent_table": "countries_dim", "parent_col": "country_code"}, {"fk": "FK_branches_bank", "child_schema": "dbo", "child_table": "branches_dim", "child_col": "bank_id", 
+"parent_schema": "dbo", "parent_table": "banks_dim", "parent_col": "bank_id"}, {"fk": "FK_branches_country", "child_schema": "dbo", "child_table": "branches_dim", "child_col": 
+"country_code", "parent_schema": "dbo", "parent_table": "countries_dim", "parent_col": "country_code"}, {"fk": "FK_case_account", "child_schema": "dbo", "child_table": 
+"compliance_cases", "child_col": "account_id", "parent_schema": "dbo", "parent_table": "accounts_dim", "parent_col": "account_id"}, {"fk": "FK_case_customer", "child_schema": 
+"dbo", "child_table": "compliance_cases", "child_col": "customer_id", "parent_schema": "dbo", "parent_table": "customers_dim", "parent_col": "customer_id"}, {"fk": 
+"FK_case_employee", "child_schema": "dbo", "child_table": "compliance_cases", "child_col": "assigned_employee_id", "parent_schema": "dbo", "parent_table": "employees_dim", 
+"parent_col": "employee_id"}, {"fk": "FK_case_source", "child_schema": "dbo", "child_table": "compliance_cases", "child_col": "source_system", "parent_schema": "dbo", 
+"parent_table": "source_systems_dim", "parent_col": "source_system"}, {"fk": "FK_kyc_currency", "child_schema": "dbo", "child_table": "customer_kyc", "child_col": 
+"income_currency", "parent_schema": "dbo", "parent_table": "currencies_dim", "parent_col": "currency_code"}, {"fk": "FK_kyc_customer", "child_schema": "dbo", "child_table": 
+"customer_kyc", "child_col": "customer_id", "parent_schema": "dbo", "parent_table": "customers_dim", "parent_col": "customer_id"}, {"fk": "FK_kyc_source", "child_schema": "dbo", 
+"child_table": "customer_kyc", "child_col": "source_system", "parent_schema": "dbo", "parent_table": "source_systems_dim", "parent_col": "source_system"}, {"fk": 
+"FK_customers_country", "child_schema": "dbo", "child_table": "customers_dim", "child_col": "country_code", "parent_schema": "dbo", "parent_table": "countries_dim", "parent_col": 
+"country_code"}, {"fk": "FK_customers_source", "child_schema": "dbo", "child_table": "customers_dim", "child_col": "source_system", "parent_schema": "dbo", "parent_table": 
+"source_systems_dim", "parent_col": "source_system"}, {"fk": "FK_daily_balance_account", "child_schema": "dbo", "child_table": "daily_account_balance", "child_col": "account_id", 
+"parent_schema": "dbo", "parent_table": "accounts_dim", "parent_col": "account_id"}, {"fk": "FK_daily_balance_currency", "child_schema": "dbo", "child_table": 
+"daily_account_balance", "child_col": "currency_code", "parent_schema": "dbo", "parent_table": "currencies_dim", "parent_col": "currency_code"}, {"fk": "FK_daily_balance_source", 
+"child_schema": "dbo", "child_table": "daily_account_balance", "child_col": "source_system", "parent_schema": "dbo", "parent_table": "source_systems_dim", "parent_col": 
+"source_system"}, {"fk": "FK_employees_branch", "child_schema": "dbo", "child_table": "employees_dim", "child_col": "branch_id", "parent_schema": "dbo", "parent_table": 
+"branches_dim", "parent_col": "branch_id"}, {"fk": "FK_employees_country", "child_schema": "dbo", "child_table": "employees_dim", "child_col": "country_code", "parent_schema": 
+"dbo", "parent_table": "countries_dim", "parent_col": "country_code"}, {"fk": "FK_employees_source", "child_schema": "dbo", "child_table": "employees_dim", "child_col": 
+"source_system", "parent_schema": "dbo", "parent_table": "source_systems_dim", "parent_col": "source_system"}, {"fk": "FK_fx_from", "child_schema": "dbo", "child_table": 
+"exchange_rates", "child_col": "from_currency", "parent_schema": "dbo", "parent_table": "currencies_dim", "parent_col": "currency_code"}, {"fk": "FK_fx_to", "child_schema": "dbo", 
+"child_table": "exchange_rates", "child_col": "to_currency", "parent_schema": "dbo", "parent_table": "currencies_dim", "parent_col": "currency_code"}, {"fk": "FK_fx_source", 
+"child_schema": "dbo", "child_table": "exchange_rates", "child_col": "source_system", "parent_schema": "dbo", "parent_table": "source_systems_dim", "parent_col": "source_system"}, 
+{"fk": "FK_loan_account", "child_schema": "dbo", "child_table": "loan_contracts", "child_col": "account_id", "parent_schema": "dbo", "parent_table": "accounts_dim", "parent_col": 
+"account_id"}, {"fk": "FK_loan_branch", "child_schema": "dbo", "child_table": "loan_contracts", "child_col": "origination_branch_id", "parent_schema": "dbo", "parent_table": 
+"branches_dim", "parent_col": "branch_id"}, {"fk": "FK_loan_currency", "child_schema": "dbo", "child_table": "loan_contracts", "child_col": "currency_code", "parent_schema": "dbo", 
+"parent_table": "currencies_dim", "parent_col": "currency_code"}, {"fk": "FK_loan_customer", "child_schema": "dbo", "child_table": "loan_contracts", "child_col": "customer_id", 
+"parent_schema": "dbo", "parent_table": "customers_dim", "parent_col": "customer_id"}, {"fk": "FK_loan_product", "child_schema": "dbo", "child_table": "loan_contracts", 
+"child_col": "product_id", "parent_schema": "dbo", "parent_table": "products_dim", "parent_col": "product_id"}, {"fk": "FK_loan_source", "child_schema": "dbo", "child_table": 
+"loan_contracts", "child_col": "source_system", "parent_schema": "dbo", "parent_table": "source_systems_dim", "parent_col": "source_system"}]
+COL_JSON: {"dbo.account_signatories": [{"col": "signatory_id", "type": "int", "nullable": "NO", "is_pk": true}, {"col": "account_id", "type": "int", "nullable": "NO", "is_pk": 
+false}, {"col": "customer_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "signatory_type", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"can_transact", "type": "bit", "nullable": "NO", "is_pk": false}, {"col": "valid_from", "type": "date", "nullable": "NO", "is_pk": false}, {"col": "valid_to", "type": "date", 
+"nullable": "YES", "is_pk": false}], "dbo.accounts_dim": [{"col": "account_id", "type": "int", "nullable": "NO", "is_pk": true}, {"col": "account_number", "type": "varchar", 
+"nullable": "NO", "is_pk": false}, {"col": "customer_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "product_id", "type": "int", "nullable": "NO", "is_pk": false}, 
+{"col": "branch_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "bank_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "currency_code", "type": 
+"varchar", "nullable": "NO", "is_pk": false}, {"col": "account_type", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "status", "type": "varchar", "nullable": "NO", 
+"is_pk": false}, {"col": "opened_at", "type": "datetime2", "nullable": "NO", "is_pk": false}, {"col": "closed_at", "type": "datetime2", "nullable": "YES", "is_pk": false}, {"col": 
+"available_balance", "type": "decimal", "nullable": "NO", "is_pk": false}, {"col": "ledger_balance", "type": "decimal", "nullable": "NO", "is_pk": false}, {"col": 
+"overdraft_limit", "type": "decimal", "nullable": "NO", "is_pk": false}, {"col": "iban", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "swift_code", "type": 
+"varchar", "nullable": "YES", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "NO", "is_pk": false}], "dbo.banks_dim": [{"col": "bank_id", "type": "int", 
+"nullable": "NO", "is_pk": true}, {"col": "bank_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "bank_name", "type": "varchar", "nullable": "NO", "is_pk": 
+false}, {"col": "country_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "bank_type", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"swift_code", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "is_internal_bank", "type": "bit", "nullable": "NO", "is_pk": false}], "dbo.branches_dim": [{"col": 
+"branch_id", "type": "int", "nullable": "NO", "is_pk": true}, {"col": "bank_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "branch_code", "type": "varchar", 
+"nullable": "NO", "is_pk": false}, {"col": "branch_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "city_name", "type": "varchar", "nullable": "NO", "is_pk": 
+false}, {"col": "country_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "opened_date", "type": "date", "nullable": "YES", "is_pk": false}, {"col": "status", 
+"type": "varchar", "nullable": "NO", "is_pk": false}], "dbo.compliance_cases": [{"col": "case_id", "type": "int", "nullable": "NO", "is_pk": true}, {"col": "alert_id", "type": 
+"varchar", "nullable": "YES", "is_pk": false}, {"col": "customer_id", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "account_id", "type": "int", "nullable": "YES", 
+"is_pk": false}, {"col": "case_type", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "priority", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"status", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "assigned_employee_id", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "opened_at", "type": 
+"datetime2", "nullable": "NO", "is_pk": false}, {"col": "closed_at", "type": "datetime2", "nullable": "YES", "is_pk": false}, {"col": "resolution_notes", "type": "varchar", 
+"nullable": "YES", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "NO", "is_pk": false}], "dbo.countries_dim": [{"col": "country_code", "type": "varchar", 
+"nullable": "NO", "is_pk": false}, {"col": "country_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "region_name", "type": "varchar", "nullable": "YES", 
+"is_pk": false}, {"col": "risk_level", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "is_sanctioned", "type": "bit", "nullable": "NO", "is_pk": false}], 
+"dbo.currencies_dim": [{"col": "currency_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "currency_name", "type": "varchar", "nullable": "NO", "is_pk": false}, 
+{"col": "symbol", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "is_active", "type": "bit", "nullable": "NO", "is_pk": false}], "dbo.customer_kyc": [{"col": 
+"kyc_id", "type": "int", "nullable": "NO", "is_pk": true}, {"col": "customer_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "kyc_status", "type": "varchar", 
+"nullable": "NO", "is_pk": false}, {"col": "risk_rating", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "occupation", "type": "varchar", "nullable": "YES", "is_pk": 
+false}, {"col": "employer_name", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "annual_income", "type": "decimal", "nullable": "YES", "is_pk": false}, {"col": 
+"income_currency", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "source_of_funds", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": 
+"last_review_date", "type": "date", "nullable": "YES", "is_pk": false}, {"col": "next_review_date", "type": "date", "nullable": "YES", "is_pk": false}, {"col": "aml_notes", "type": 
+"varchar", "nullable": "YES", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "NO", "is_pk": false}], "dbo.customers_dim": [{"col": "customer_id", "type": 
+"int", "nullable": "NO", "is_pk": true}, {"col": "customer_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "first_name", "type": "varchar", "nullable": "NO", 
+"is_pk": false}, {"col": "last_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "full_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"email", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "phone", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "birth_date", "type": "date", 
+"nullable": "YES", "is_pk": false}, {"col": "customer_type", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "segment", "type": "varchar", "nullable": "NO", "is_pk": 
+false}, {"col": "tax_id", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "country_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "city_name", 
+"type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "address_line", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "pep_flag", "type": "bit", "nullable": 
+"NO", "is_pk": false}, {"col": "vip_flag", "type": "bit", "nullable": "NO", "is_pk": false}, {"col": "deceased_flag", "type": "bit", "nullable": "NO", "is_pk": false}, {"col": 
+"created_at", "type": "datetime2", "nullable": "NO", "is_pk": false}, {"col": "updated_at", "type": "datetime2", "nullable": "YES", "is_pk": false}, {"col": "source_system", 
+"type": "varchar", "nullable": "NO", "is_pk": false}], "dbo.daily_account_balance": [{"col": "balance_date", "type": "date", "nullable": "NO", "is_pk": false}, {"col": 
+"account_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "currency_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "opening_balance", "type": 
+"decimal", "nullable": "NO", "is_pk": false}, {"col": "closing_balance", "type": "decimal", "nullable": "NO", "is_pk": false}, {"col": "total_credits", "type": "decimal", 
+"nullable": "NO", "is_pk": false}, {"col": "total_debits", "type": "decimal", "nullable": "NO", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "NO", 
+"is_pk": false}], "dbo.data_assets_catalog": [{"col": "asset_id", "type": "int", "nullable": "NO", "is_pk": true}, {"col": "asset_name", "type": "varchar", "nullable": "NO", 
+"is_pk": false}, {"col": "domain_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "owner_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"criticality", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "contains_pii", "type": "bit", "nullable": "NO", "is_pk": false}, {"col": "regulatory_scope", "type": 
+"varchar", "nullable": "YES", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "YES", "is_pk": false}], "dbo.data_quality_results": [{"col": "result_id", 
+"type": "int", "nullable": "NO", "is_pk": true}, {"col": "execution_date", "type": "datetime2", "nullable": "NO", "is_pk": false}, {"col": "rule_name", "type": "varchar", 
+"nullable": "NO", "is_pk": false}, {"col": "target_table", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "failed_records", "type": "int", "nullable": "NO", "is_pk": 
+false}, {"col": "severity", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "status", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "comments", 
+"type": "varchar", "nullable": "YES", "is_pk": false}], "dbo.data_quality_rules": [{"col": "rule_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "rule_name", "type": 
+"varchar", "nullable": "NO", "is_pk": false}, {"col": "target_table", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "target_column", "type": "varchar", "nullable": 
+"YES", "is_pk": false}, {"col": "rule_type", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "severity", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"rule_description", "type": "varchar", "nullable": "NO", "is_pk": false}], "dbo.debt_portfolio_raw": [{"col": "debt_id", "type": "varchar", "nullable": "NO", "is_pk": false}, 
+{"col": "customer_id", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "customer_name", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "customer_email", 
+"type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "debt_type", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "principal_amount", "type": "decimal", 
+"nullable": "YES", "is_pk": false}, {"col": "outstanding_balance", "type": "decimal", "nullable": "YES", "is_pk": false}, {"col": "interest_rate_pct", "type": "decimal", 
+"nullable": "YES", "is_pk": false}, {"col": "currency_code", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "status", "type": "varchar", "nullable": "YES", "is_pk": 
+false}, {"col": "risk_level", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "country_code", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": 
+"origination_date", "type": "date", "nullable": "YES", "is_pk": false}, {"col": "maturity_date", "type": "date", "nullable": "YES", "is_pk": false}, {"col": "last_payment_date", 
+"type": "date", "nullable": "YES", "is_pk": false}, {"col": "days_overdue", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "source_system", "type": "varchar", 
+"nullable": "YES", "is_pk": false}], "dbo.dq_error_log": [{"col": "dq_error_id", "type": "int", "nullable": "NO", "is_pk": true}, {"col": "execution_date", "type": "datetime2", 
+"nullable": "NO", "is_pk": false}, {"col": "table_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "record_id", "type": "varchar", "nullable": "NO", "is_pk": 
+false}, {"col": "column_name", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "rule_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"error_description", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "severity", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "source_system", 
+"type": "varchar", "nullable": "YES", "is_pk": false}], "dbo.employees_dim": [{"col": "employee_id", "type": "int", "nullable": "NO", "is_pk": true}, {"col": "employee_code", 
+"type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "full_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "email", "type": "varchar", "nullable": 
+"NO", "is_pk": false}, {"col": "role_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "department_name", "type": "varchar", "nullable": "NO", "is_pk": false}, 
+{"col": "branch_id", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "country_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "status", "type": 
+"varchar", "nullable": "NO", "is_pk": false}, {"col": "hired_date", "type": "date", "nullable": "NO", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "NO", 
+"is_pk": false}], "dbo.exchange_rates": [{"col": "rate_date", "type": "date", "nullable": "NO", "is_pk": false}, {"col": "from_currency", "type": "varchar", "nullable": "NO", 
+"is_pk": false}, {"col": "to_currency", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "rate_value", "type": "decimal", "nullable": "NO", "is_pk": false}, {"col": 
+"source_system", "type": "varchar", "nullable": "NO", "is_pk": false}], "dbo.fraud_alerts_raw": [{"col": "alert_id", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"transfer_id", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "account_id", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "customer_name", "type": 
+"varchar", "nullable": "YES", "is_pk": false}, {"col": "customer_email", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "fraud_type", "type": "varchar", "nullable": 
+"YES", "is_pk": false}, {"col": "risk_score", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "amount_involved", "type": "decimal", "nullable": "YES", "is_pk": false}, 
+{"col": "currency_code", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "country_code", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "status", 
+"type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "detection_method", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "analyst_id", "type": "int", 
+"nullable": "YES", "is_pk": false}, {"col": "created_at", "type": "datetime2", "nullable": "YES", "is_pk": false}, {"col": "resolved_at", "type": "datetime2", "nullable": "YES", 
+"is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "YES", "is_pk": false}], "dbo.loan_contracts": [{"col": "loan_id", "type": "int", "nullable": "NO", 
+"is_pk": true}, {"col": "debt_id", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "customer_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": 
+"account_id", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "product_id", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "origination_branch_id", "type": 
+"int", "nullable": "NO", "is_pk": false}, {"col": "principal_amount", "type": "decimal", "nullable": "NO", "is_pk": false}, {"col": "outstanding_balance", "type": "decimal", 
+"nullable": "NO", "is_pk": false}, {"col": "interest_rate_pct", "type": "decimal", "nullable": "NO", "is_pk": false}, {"col": "term_months", "type": "int", "nullable": "NO", 
+"is_pk": false}, {"col": "repayment_frequency", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "currency_code", "type": "varchar", "nullable": "NO", "is_pk": false}, 
+{"col": "loan_status", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "collateral_type", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": 
+"origination_date", "type": "date", "nullable": "NO", "is_pk": false}, {"col": "maturity_date", "type": "date", "nullable": "NO", "is_pk": false}, {"col": "last_payment_date", 
+"type": "date", "nullable": "YES", "is_pk": false}, {"col": "days_overdue", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "restructuring_flag", "type": "bit", 
+"nullable": "NO", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "NO", "is_pk": false}], "dbo.payments": [{"col": "payment_id", "type": "int", "nullable": 
+"NO", "is_pk": false}, {"col": "customer_name", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "amount", "type": "decimal", "nullable": "YES", "is_pk": false}, 
+{"col": "status", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "created_at", "type": "datetime", "nullable": "YES", "is_pk": false}], "dbo.payments_raw": [{"col": 
+"payment_id", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "customer_name", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "customer_email", 
+"type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "amount", "type": "decimal", "nullable": "YES", "is_pk": false}, {"col": "currency_code", "type": "varchar", 
+"nullable": "YES", "is_pk": false}, {"col": "status", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "country_code", "type": "varchar", "nullable": "YES", "is_pk": 
+false}, {"col": "created_at", "type": "datetime2", "nullable": "YES", "is_pk": false}, {"col": "updated_at", "type": "datetime2", "nullable": "YES", "is_pk": false}, {"col": 
+"source_system", "type": "varchar", "nullable": "YES", "is_pk": false}], "dbo.products_dim": [{"col": "product_id", "type": "int", "nullable": "NO", "is_pk": true}, {"col": 
+"product_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "product_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "product_family", 
+"type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "risk_category", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "regulatory_scope", "type": "varchar", 
+"nullable": "YES", "is_pk": false}, {"col": "is_active", "type": "bit", "nullable": "NO", "is_pk": false}], "dbo.sanctions_watchlist": [{"col": "watchlist_id", "type": "int", 
+"nullable": "NO", "is_pk": true}, {"col": "listed_name", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "country_code", "type": "varchar", "nullable": "YES", 
+"is_pk": false}, {"col": "list_source", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "risk_reason", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"active_flag", "type": "bit", "nullable": "NO", "is_pk": false}], "dbo.source_systems_dim": [{"col": "source_system", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"source_description", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "criticality", "type": "varchar", "nullable": "NO", "is_pk": false}], "dbo.transfers_raw": 
+[{"col": "transfer_id", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "sender_account", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": 
+"receiver_account", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "sender_name", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "receiver_name", 
+"type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "sender_email", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "amount", "type": "decimal", 
+"nullable": "YES", "is_pk": false}, {"col": "currency_code", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "status", "type": "varchar", "nullable": "YES", "is_pk": 
+false}, {"col": "country_origin", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "country_dest", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": 
+"channel", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "bank_origin", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "bank_dest", "type": 
+"varchar", "nullable": "YES", "is_pk": false}, {"col": "created_at", "type": "datetime2", "nullable": "YES", "is_pk": false}, {"col": "updated_at", "type": "datetime2", "nullable": 
+"YES", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "YES", "is_pk": false}], "dbo.vw_customer_risk_profile": [{"col": "customer_id", "type": "int", 
+"nullable": "NO", "is_pk": false}, {"col": "customer_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "full_name", "type": "varchar", "nullable": "NO", "is_pk": 
+false}, {"col": "customer_type", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "segment", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": 
+"country_code", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "pep_flag", "type": "bit", "nullable": "NO", "is_pk": false}, {"col": "vip_flag", "type": "bit", 
+"nullable": "NO", "is_pk": false}, {"col": "deceased_flag", "type": "bit", "nullable": "NO", "is_pk": false}, {"col": "kyc_status", "type": "varchar", "nullable": "YES", "is_pk": 
+false}, {"col": "risk_rating", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "annual_income", "type": "decimal", "nullable": "YES", "is_pk": false}, {"col": 
+"account_id", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "account_number", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "account_status", "type": 
+"varchar", "nullable": "YES", "is_pk": false}, {"col": "currency_code", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "available_balance", "type": "decimal", 
+"nullable": "YES", "is_pk": false}, {"col": "loan_count", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "total_outstanding", "type": "decimal", "nullable": "NO", 
+"is_pk": false}, {"col": "fraud_alert_count", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "derived_customer_risk", "type": "varchar", "nullable": "NO", "is_pk": 
+false}], "dbo.vw_debt_quality_issues": [{"col": "debt_id", "type": "varchar", "nullable": "NO", "is_pk": false}, {"col": "customer_id", "type": "int", "nullable": "YES", "is_pk": 
+false}, {"col": "customer_name", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "customer_email", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": 
+"debt_type", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "principal_amount", "type": "decimal", "nullable": "YES", "is_pk": false}, {"col": 
+"outstanding_balance", "type": "decimal", "nullable": "YES", "is_pk": false}, {"col": "interest_rate_pct", "type": "decimal", "nullable": "YES", "is_pk": false}, {"col": 
+"currency_code", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "status", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "risk_level", "type": 
+"varchar", "nullable": "YES", "is_pk": false}, {"col": "country_code", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "origination_date", "type": "date", 
+"nullable": "YES", "is_pk": false}, {"col": "maturity_date", "type": "date", "nullable": "YES", "is_pk": false}, {"col": "last_payment_date", "type": "date", "nullable": "YES", 
+"is_pk": false}, {"col": "days_overdue", "type": "int", "nullable": "YES", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": 
+"negative_interest_flag", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "bad_dates_flag", "type": "int", "nullable": "NO", "is_pk": false}, {"col": 
+"balance_gt_principal_flag", "type": "int", "nullable": "NO", "is_pk": false}], "dbo.vw_suspicious_transfers": [{"col": "transfer_id", "type": "varchar", "nullable": "NO", "is_pk": 
+false}, {"col": "sender_account", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "receiver_account", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": 
+"sender_name", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "receiver_name", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "sender_email", 
+"type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "amount", "type": "decimal", "nullable": "YES", "is_pk": false}, {"col": "currency_code", "type": "varchar", 
+"nullable": "YES", "is_pk": false}, {"col": "status", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "country_origin", "type": "varchar", "nullable": "YES", 
+"is_pk": false}, {"col": "country_dest", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "channel", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": 
+"bank_origin", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "bank_dest", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "created_at", "type": 
+"datetime2", "nullable": "YES", "is_pk": false}, {"col": "source_system", "type": "varchar", "nullable": "YES", "is_pk": false}, {"col": "high_amount_flag", "type": "int", 
+"nullable": "NO", "is_pk": false}, {"col": "sanctioned_country_flag", "type": "int", "nullable": "NO", "is_pk": false}, {"col": "same_account_flag", "type": "int", "nullable": 
+"NO", "is_pk": false}, {"col": "bad_email_flag", "type": "int", "nullable": "NO", "is_pk": false}]}
+
+

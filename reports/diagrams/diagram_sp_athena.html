@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><title>SP Athena — sp_calculate_transfer_fraud_score</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0d1117;color:#e2e8f0;min-height:100vh}
+header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 24px}
+header h1{font-size:1.1rem;color:#f6ad55}
+header p{font-size:0.8rem;color:#8b949e;margin-top:4px}
+.badge{background:#0d419d;color:#58a6ff;font-size:0.65rem;padding:2px 8px;border-radius:8px;margin-left:8px}
+.diagram{padding:28px;display:flex;flex-direction:column;align-items:center;gap:0}
+.sp-box{background:linear-gradient(135deg,#2d1f0a,#3d2a0f);border:2px solid #f6ad55;border-radius:14px;padding:18px 32px;text-align:center;min-width:300px;box-shadow:0 0 30px rgba(246,173,85,.2)}
+.sp-box h2{font-size:1rem;color:#fef3c7} .sp-box p{font-size:0.75rem;color:#fbbf24;margin-top:5px}
+.connector{width:2px;height:28px;background:#30363d;margin:0 auto}
+.arrow{font-size:1.2rem;color:#30363d;text-align:center}
+.sec{font-size:0.68rem;color:#30363d;text-transform:uppercase;letter-spacing:2px;margin:20px 0 10px;text-align:center}
+.grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:860px}
+.tbl-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 16px;min-width:170px;text-align:center}
+.ti{font-size:1.2rem} .tn{font-size:0.78rem;font-weight:600;color:#e2e8f0;margin-top:5px}
+.tr{font-size:0.7rem;color:#8b949e;margin-top:3px} .ts{font-size:0.65rem;color:#58a6ff;margin-top:3px}
+.rules{display:flex;flex-direction:column;gap:8px;max-width:820px;width:100%}
+.rc{background:#161b22;border-left:4px solid #e53e3e;border-radius:6px;padding:10px 14px;display:flex;align-items:flex-start;gap:12px}
+.rs{font-size:0.62rem;font-weight:700;padding:2px 7px;border-radius:8px;white-space:nowrap;margin-top:2px}
+.rn{font-size:0.78rem;font-weight:600;color:#e2e8f0} .rt{font-size:0.7rem;color:#8b949e;margin-top:2px} .rd{font-size:0.72rem;color:#a0aec0;margin-top:3px}
+.out-card{background:#0d2818;border:1px solid #3fb950;border-radius:8px;padding:12px 16px;min-width:190px;text-align:center}
+.on{font-size:0.78rem;font-weight:600;color:#3fb950;margin-top:5px} .od{font-size:0.7rem;color:#8b949e;margin-top:3px}
+</style></head><body>
+<header>
+  <h1>⚙ sp_calculate_transfer_fraud_score<span class="badge">Athena</span></h1>
+  <p>Base de datos: bank_modernization_kiro_db · Post-migración · 0 reglas DQ · 6 tablas entrada</p>
+</header>
+<div class="diagram">
+  <div class="sp-box"><h2>⚙ dbo.sp_calculate_transfer_fraud_score</h2><p>0 reglas · 6 tablas entrada · 2 salida · Fuente: Athena</p></div>
+  <div class="connector"></div><div class="arrow">▼</div>
+  <div class="sec">Tablas de entrada (Athena)</div>
+  <div class="grid"><div class="tbl-card"><div class="ti">🗄</div><div class="tn">dbo_accounts_dim</div><div class="tr">200 filas · 16 cols</div><div class="ts">Athena</div></div>
+<div class="tbl-card"><div class="ti">🗄</div><div class="tn">dbo_countries_dim</div><div class="tr">10 filas · 4 cols</div><div class="ts">Athena</div></div>
+<div class="tbl-card"><div class="ti">🗄</div><div class="tn">dbo_customer_behavior_profile</div><div class="tr">0 filas · 0 cols</div><div class="ts">Athena</div></div>
+<div class="tbl-card"><div class="ti">🗄</div><div class="tn">dbo_fraud_score_history</div><div class="tr">200 filas · 13 cols</div><div class="ts">Athena</div></div>
+<div class="tbl-card"><div class="ti">🗄</div><div class="tn">dbo_sp_calculate_transfer_fraud_score</div><div class="tr">? filas · 0 cols</div><div class="ts">Athena</div></div>
+<div class="tbl-card"><div class="ti">🗄</div><div class="tn">dbo_transfers_raw</div><div class="tr">200 filas · 16 cols</div><div class="ts">Athena</div></div>
+</div>
+  <div class="connector"></div><div class="arrow">▼</div>
+  <div class="sec">Reglas de calidad ejecutadas</div>
+  <div class="rules"></div>
+  <div class="connector"></div><div class="arrow">▼</div>
+  <div class="sec">Tablas de salida (Athena)</div>
+  <div class="grid">
+    <div class="out-card"><div style="font-size:1.2rem">📋</div><div class="on">dbo_data_quality_results</div><div class="od">Resumen por regla</div><div class="ts">Athena</div></div>
+    <div class="out-card"><div style="font-size:1.2rem">🚨</div><div class="on">dbo_dq_error_log</div><div class="od">Detalle errores por registro</div><div class="ts">Athena</div></div>
+  </div>
+</div></body></html>

@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Auto-generar dashboard QuickSight",
+  "description": "Al finalizar la ejecución del agente después de correr el pipeline, crea o actualiza automáticamente el dashboard en QuickSight con los scores y KPIs más recientes",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "python app/dashboard/quicksight_dashboard.py",
+    "timeout": 300
+  }
+}

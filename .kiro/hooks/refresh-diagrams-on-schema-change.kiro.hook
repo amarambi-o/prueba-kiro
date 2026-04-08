@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Recordar regenerar diagramas",
+  "description": "Cuando se edita extractor.py o athena_setup.py, recuerda al agente que los diagramas pueden estar desactualizados y sugiere regenerarlos",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "app/extractor.py",
+      "app/athena_setup.py"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Se modificó extractor.py o athena_setup.py, que definen el schema y la BD. Los diagramas en reports/ pueden estar desactualizados. Informa al usuario que debería ejecutar: python app/generate_diagrams.py (pre-migración) y/o python app/generate_diagrams_athena.py (post-migración) para mantenerlos sincronizados. No ejecutes nada automáticamente, solo avisa."
+  }
+}

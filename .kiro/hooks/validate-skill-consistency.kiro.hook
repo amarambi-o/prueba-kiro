@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Validar consistencia del skill",
+  "description": "Cuando se edita el skill de la demo, verifica que los datos clave (scores, findings, business case) estén alineados con los archivos reales del proyecto",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      ".kiro/skills/bank-modernization-demo.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Se editó el skill de la demo. Verifica que los datos numéricos clave del skill (DQ Score, compliance scores, business case, número de tablas, findings) sean consistentes con lo que está en los scripts app/compliance_engine.py, app/modernization_advisor.py y app/dq_engine.py. Si detectas inconsistencias, señálalas. Si todo está alineado, confirma."
+  }
+}
