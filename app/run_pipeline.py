@@ -257,6 +257,23 @@ def main():
     banner("FASE POST — Mapeo Athena + Diagramas")
     fase_post_mapeo(bucket, prefix, a.skip_post_diagrams)
 
+    # ── Reportes finales ─────────────────────────────────────────────────────
+    sep("POST — Generando reportes finales")
+    sys.path.insert(0, os.path.join(_APP_DIR, "generators"))
+    for mod_name, label in [
+        ("discovery_report",   "discovery.md"),
+        ("executive_report",   "executive_report.md"),
+        ("architecture_report","architecture.md"),
+        ("excel_report",       "executive_report.xlsx"),
+        ("html_report",        "executive_report.html"),
+    ]:
+        try:
+            mod = __import__(mod_name)
+            mod.generate(bucket, prefix)
+            print(f"  OK {label}")
+        except Exception as e:
+            print(f"  [WARN] {mod_name}: {e}")
+
     # ── Resumen final ────────────────────────────────────────────────────────
     elapsed = time.time() - t0
     banner(f"PIPELINE COMPLETADO en {elapsed:.1f}s")
