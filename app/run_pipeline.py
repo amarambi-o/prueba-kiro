@@ -233,6 +233,26 @@ def main():
     adv = modernization_advisor.run_modernization_advisor(bucket, prefix)
     ok("Modernization Advisor", time.time() - t)
 
+    # ── Action Engine — insights ejecutivos ──────────────────────────────────
+    sep("PASO 5b — Action Engine (Insights Ejecutivos)")
+    t = time.time()
+    import action_engine
+    adv_full = action_engine._get_json_local(bucket, f"{prefix}/output/modernization/modernization_summary.json") \
+               if hasattr(action_engine, '_get_json_local') else {}
+    try:
+        import boto3, json as _json
+        _obj = boto3.client("s3", verify=False).get_object(
+            Bucket=bucket, Key=f"{prefix}/output/modernization/modernization_summary.json")
+        adv_full = _json.loads(_obj["Body"].read())
+    except Exception:
+        adv_full = {}
+    insights = action_engine.run_action_engine(
+        bucket=bucket, prefix=prefix,
+        dq_snapshot=snapshot, compliance=comp["scores"],
+        modernization=adv_full,
+    )
+    ok("Action Engine", time.time() - t)
+
     # ── POST: Mapeo Athena + Diagramas ───────────────────────────────────────
     banner("FASE POST — Mapeo Athena + Diagramas")
     fase_post_mapeo(bucket, prefix, a.skip_post_diagrams)
@@ -247,6 +267,14 @@ def main():
     print(f"  DQ Score     : {readiness['data_quality_score']} / 100")
     print(f"  Compliance   : {comp['findings_count']} findings | Reg.Risk {comp['scores']['regulatory_risk_score']}/100")
     print(f"  Strategy     : {adv['strategy'].upper()} | ROI 3Y {adv['roi_3y_pct']}%")
+    if insights:
+        top3 = insights.get("top_actions", [])[:3]
+        rr   = insights.get("risk_reduction", {})
+        print(f"\n  TOP ACCIONES:")
+        for a in top3:
+            print(f"    #{a['rank']} [{a['severity']}] {a['table']:<30} impact={a['impact_score']}/100")
+        print(f"  Risk Reduction: {rr.get('current_risk_pct',0)} -> {rr.get('risk_after_top3_pct',0)} (-{rr.get('risk_reduction_pct',0)} pts)")
+        print(f"  Headline: {insights.get('executive_summary',{}).get('headline','')[:80]}...")
     print(f"  Diagramas    : reports/diagrams/diagram_database.html")
     print(f"               : reports/diagrams/diagram_sp.html")
     print(f"               : reports/diagrams/diagram_database_athena.html")

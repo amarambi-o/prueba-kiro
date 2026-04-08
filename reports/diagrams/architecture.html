@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Arquitectura — Bank Modernization Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0d1117;color:#e2e8f0;min-height:100vh;padding:24px}
+h1{text-align:center;font-size:1.3rem;color:#63b3ed;margin-bottom:6px}
+.subtitle{text-align:center;font-size:0.8rem;color:#718096;margin-bottom:28px}
+.diagram{display:flex;flex-direction:column;gap:0;max-width:1100px;margin:0 auto}
+.zone{border-radius:10px;padding:16px 20px;margin-bottom:4px}
+.zone-local{background:#1a1f2e;border:1.5px solid #2d3748}
+.zone-s3{background:#1a2d1a;border:1.5px solid #276749}
+.zone-aws{background:#1a2040;border:1.5px solid #2b6cb0}
+.zone-out{background:#2d1f0a;border:1.5px solid #744210}
+.zone-label{font-size:0.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;opacity:.7}
+.zone-local .zone-label{color:#90cdf4}
+.zone-s3 .zone-label{color:#9ae6b4}
+.zone-aws .zone-label{color:#90cdf4}
+.zone-out .zone-label{color:#fbd38d}
+.arrow{text-align:center;font-size:1.1rem;color:#4a5568;margin:2px 0;line-height:1.4}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.box{border-radius:7px;padding:10px 14px;font-size:0.75rem;flex:1;min-width:140px}
+.box-title{font-weight:700;font-size:0.78rem;margin-bottom:6px}
+.box-item{color:#a0aec0;margin:2px 0;font-size:0.72rem;padding-left:10px;position:relative}
+.box-item::before{content:"·";position:absolute;left:2px;color:#4a5568}
+.box-sql{background:#1e2d4a;border:1px solid #2b6cb0}
+.box-sql .box-title{color:#90cdf4}
+.box-pipe{background:#2d1a4a;border:1px solid #553c9a}
+.box-pipe .box-title{color:#d6bcfa}
+.box-s3{background:#162d20;border:1px solid #276749}
+.box-s3 .box-title{color:#9ae6b4}
+.box-athena{background:#1a2d4a;border:1px solid #2b6cb0}
+.box-athena .box-title{color:#90cdf4}
+.box-qs{background:#2d1a1a;border:1px solid #744210}
+.box-qs .box-title{color:#fbd38d}
+.box-rep{background:#1a1a2d;border:1px solid #553c9a}
+.box-rep .box-title{color:#d6bcfa}
+.pipeline{display:flex;gap:0;align-items:stretch;flex-wrap:wrap;margin-top:4px}
+.step{background:#1e2d1e;border:1px solid #276749;border-radius:6px;padding:8px 10px;font-size:0.7rem;flex:1;min-width:100px}
+.step-num{font-weight:700;color:#9ae6b4;font-size:0.68rem}
+.step-name{color:#e2e8f0;font-weight:600;margin:2px 0;font-size:0.72rem}
+.step-detail{color:#718096;font-size:0.65rem}
+.step-arrow{display:flex;align-items:center;color:#4a5568;font-size:1rem;padding:0 3px;align-self:center}
+.step.critical{background:#2d1a1a;border-color:#744210}
+.step.critical .step-num{color:#fbd38d}
+.badge{display:inline-block;padding:1px 5px;border-radius:8px;font-size:0.6rem;font-weight:700;margin-left:3px;vertical-align:middle}
+.badge-new{background:#276749;color:#9ae6b4}
+.legend{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:20px;font-size:0.7rem}
+.leg{display:flex;align-items:center;gap:5px;color:#a0aec0}
+.leg-dot{width:10px;height:10px;border-radius:2px}
+</style>
+</head>
+<body>
+<h1>&#127970; Bank Modernization Demo &#8212; Arquitectura del Sistema</h1>
+<p class="subtitle">Pipeline automatizado: SQL Server on-premises &#8594; AWS (S3 &#183; Athena &#183; QuickSight)</p>
+
+<div class="diagram">
+
+  <div class="zone zone-local">
+    <div class="zone-label">&#128205; Local / On-Premises</div>
+    <div class="row">
+      <div class="box box-sql">
+        <div class="box-title">&#128452; SQL Server (local) &#183; BD: demo</div>
+        <div class="box-item">25 tablas + 3 vistas</div>
+        <div class="box-item">1 SP: sp_run_data_quality_checks</div>
+        <div class="box-item">35 relaciones FK</div>
+        <div class="box-item">ETL SSIS (.dtsx) [opcional]</div>
+      </div>
+      <div class="box box-pipe">
+        <div class="box-title">&#9881; run_pipeline.py</div>
+        <div class="box-item">config.ini (multi-banco)</div>
+        <div class="box-item">--bank BankDemo</div>
+        <div class="box-item">--skip-extract</div>
+        <div class="box-item">--skip-pre-diagrams</div>
+      </div>
+      <div class="box box-pipe">
+        <div class="box-title">&#128230; app/core/</div>
+        <div class="box-item">extractor.py</div>
+        <div class="box-item">dq_engine.py</div>
+        <div class="box-item">dq_engine_universal.py <span class="badge badge-new">NEW</span></div>
+        <div class="box-item">compliance_engine.py</div>
+        <div class="box-item">modernization_advisor.py</div>
+        <div class="box-item">action_engine.py <span class="badge badge-new">NEW</span></div>
+      </div>
+      <div class="box box-pipe">
+        <div class="box-title">&#128202; app/generators/ + dashboard/</div>
+        <div class="box-item">generate_diagrams.py</div>
+        <div class="box-item">generate_diagrams_athena.py</div>
+        <div class="box-item">generate_excel_report.py <span class="badge badge-new">NEW</span></div>
+        <div class="box-item">quicksight_dashboard.py</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">&#11015; boto3 / pyodbc</div>
+
+  <div class="zone zone-s3">
+    <div class="zone-label">&#128260; Pipeline de Ejecucion</div>
+    <div class="pipeline">
+      <div class="step">
+        <div class="step-num">PRE</div>
+        <div class="step-name">Mapeo SQL Server</div>
+        <div class="step-detail">Tablas &#183; FKs &#183; SPs<br>Topological sort</div>
+      </div>
+      <div class="step-arrow">&#8594;</div>
+      <div class="step">
+        <div class="step-num">PASO 1</div>
+        <div class="step-name">Extraccion</div>
+        <div class="step-detail">28 CSVs &#8594; S3 raw/<br>extraction_inventory.json</div>
+      </div>
+      <div class="step-arrow">&#8594;</div>
+      <div class="step">
+        <div class="step-num">PASO 2</div>
+        <div class="step-name">DQ Engine</div>
+        <div class="step-detail">14 reglas payments_raw<br>+ Universal todas las tablas</div>
+      </div>
+      <div class="step-arrow">&#8594;</div>
+      <div class="step">
+        <div class="step-num">PASO 3</div>
+        <div class="step-name">Athena Setup</div>
+        <div class="step-detail">38 tablas externas<br>bank_modernization_kiro_db</div>
+      </div>
+      <div class="step-arrow">&#8594;</div>
+      <div class="step">
+        <div class="step-num">PASO 4</div>
+        <div class="step-name">Compliance</div>
+        <div class="step-detail">7 reglas &#183; 4 frameworks<br>PCI &#183; SOX &#183; GDPR &#183; Basel</div>
+      </div>
+      <div class="step-arrow">&#8594;</div>
+      <div class="step">
+        <div class="step-num">PASO 5</div>
+        <div class="step-name">Modernization</div>
+        <div class="step-detail">Estrategia MAP<br>Business case &#183; ROI</div>
+      </div>
+      <div class="step-arrow">&#8594;</div>
+      <div class="step critical">
+        <div class="step-num">PASO 5b</div>
+        <div class="step-name">Action Engine <span class="badge badge-new">NEW</span></div>
+        <div class="step-detail">Top 5 acciones<br>Risk reduction<br>Executive summary</div>
+      </div>
+      <div class="step-arrow">&#8594;</div>
+      <div class="step">
+        <div class="step-num">POST</div>
+        <div class="step-name">Diagramas</div>
+        <div class="step-detail">ER SQL Server<br>ER Athena &#183; SP flow</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">&#11015; S3 PUT</div>
+
+  <div class="zone zone-s3">
+    <div class="zone-label">&#9729; Amazon S3 &#183; bank-modernization-kiro / bankdemo/</div>
+    <div class="row">
+      <div class="box box-s3">
+        <div class="box-title">&#128193; raw/</div>
+        <div class="box-item">dbo/{tabla}.csv (28 tablas)</div>
+        <div class="box-item">_metadata/extraction_inventory.json</div>
+        <div class="box-item">_metadata/stored_procedures.json</div>
+      </div>
+      <div class="box box-s3">
+        <div class="box-title">&#9989; clean/ + &#10060; errors/</div>
+        <div class="box-item">payments_clean.csv (legacy)</div>
+        <div class="box-item">payments_errors.csv (legacy)</div>
+        <div class="box-item">dbo/{tabla}_clean.csv (universal)</div>
+        <div class="box-item">dbo/{tabla}_errors.csv (universal)</div>
+      </div>
+      <div class="box box-s3">
+        <div class="box-title">&#128202; output/</div>
+        <div class="box-item">data_quality_snapshot.json</div>
+        <div class="box-item">readiness_score.json</div>
+        <div class="box-item">dq_universal_snapshot.json</div>
+        <div class="box-item">action_insights.json</div>
+        <div class="box-item">executive_summary_actionable.md</div>
+      </div>
+      <div class="box box-s3">
+        <div class="box-title">&#128203; output/compliance/ + modernization/</div>
+        <div class="box-item">compliance_report.json</div>
+        <div class="box-item">regulatory_scores.json</div>
+        <div class="box-item">modernization_summary.json</div>
+        <div class="box-item">migration_strategy.json</div>
+        <div class="box-item">business_case.json</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">&#11015; Athena &#183; QuickSight &#183; Local</div>
+
+  <div class="zone zone-aws">
+    <div class="zone-label">&#9729; AWS &#8212; Analisis y Visualizacion</div>
+    <div class="row">
+      <div class="box box-athena">
+        <div class="box-title">&#128269; Amazon Athena</div>
+        <div class="box-item">bank_modernization_kiro_db</div>
+        <div class="box-item">38 tablas externas (S3)</div>
+        <div class="box-item">bank_kpi_summary (vista)</div>
+        <div class="box-item">bank_scores_by_dimension (vista)</div>
+        <div class="box-item">bank_risk_matrix (vista)</div>
+        <div class="box-item">SQL serverless sin infraestructura</div>
+      </div>
+      <div class="box box-qs">
+        <div class="box-title">&#128200; Amazon QuickSight</div>
+        <div class="box-item">3 datasets DIRECT_QUERY</div>
+        <div class="box-item">Hoja 1: Executive Dashboard</div>
+        <div class="box-item">&#8212; 6 KPIs + 6 Gauges + Business case</div>
+        <div class="box-item">Hoja 2: Scores by Dimension</div>
+        <div class="box-item">&#8212; Bar charts por categoria</div>
+        <div class="box-item">Hoja 3: Data Risk Matrix</div>
+        <div class="box-item">&#8212; Scatter plot DQ vs ETL Impact</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">&#11015; Archivos locales</div>
+
+  <div class="zone zone-out">
+    <div class="zone-label">&#128193; reports/ &#8212; Outputs Locales</div>
+    <div class="row">
+      <div class="box box-rep">
+        <div class="box-title">&#128506; diagrams/</div>
+        <div class="box-item">diagram_database.html (ER SQL Server)</div>
+        <div class="box-item">diagram_sp.html (flujo SP)</div>
+        <div class="box-item">diagram_database_athena.html</div>
+        <div class="box-item">diagram_sp_athena.html</div>
+        <div class="box-item">architecture.html (este diagrama)</div>
+        <div class="box-item">kiro_vs_tradicional.html</div>
+      </div>
+      <div class="box box-rep">
+        <div class="box-title">&#128196; executive_report.xlsx</div>
+        <div class="box-item">Hoja 1: Resumen Ejecutivo</div>
+        <div class="box-item">Hoja 2: Scores &amp; Dashboard</div>
+        <div class="box-item">Hoja 3: Costos On-Prem vs AWS</div>
+        <div class="box-item">Hoja 4: Equipo &amp; Comparativa</div>
+        <div class="box-item">Hoja 5: Roadmap &amp; Riesgos</div>
+      </div>
+      <div class="box box-rep">
+        <div class="box-title">&#128221; executive/ + data/</div>
+        <div class="box-item">executive_report.md</div>
+        <div class="box-item">cost_estimation.json</div>
+        <div class="box-item">roadmap.json</div>
+        <div class="box-item">target_architecture.json</div>
+        <div class="box-item">security_controls.json</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:#2b6cb0"></div>Local / Pipeline</div>
+  <div class="leg"><div class="leg-dot" style="background:#276749"></div>Amazon S3</div>
+  <div class="leg"><div class="leg-dot" style="background:#553c9a"></div>Athena / QuickSight</div>
+  <div class="leg"><div class="leg-dot" style="background:#744210"></div>Outputs locales</div>
+  <div class="leg"><span class="badge badge-new">NEW</span>&nbsp;Modulos nuevos</div>
+</div>
+
+<p style="text-align:center;margin-top:16px;font-size:0.65rem;color:#4a5568">
+  Bank Modernization Readiness Advisor &#8212; Kiro + AWS &#183; eu-central-1
+</p>
+</body>
+</html>
