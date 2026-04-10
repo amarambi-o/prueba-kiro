@@ -1,0 +1,142 @@
+======================================================================
+COMPARACION DE DATOS: SQL SERVER vs TXT LOCAL
+======================================================================
+
+[1] Conectando a SQL Server...
+    Tablas encontradas (42): ['account_signatories', 'accounts_dim', 'audit_change_log', 'banks_dim', 'beneficiaries_dim', 'blacklist_entities', 'branches_dim', 'card_transactions_raw', 'cards_dim', 'case_actions', 'compliance_cases', 'countries_dim', 'currencies_dim', 'customer_behavior_profile', 'customer_kyc', 'customer_sessions', 'customers_dim', 'daily_account_balance', 'data_assets_catalog', 'data_quality_results', 'data_quality_rules', 'debt_portfolio_raw', 'devices_dim', 'dq_error_log', 'employees_dim', 'exchange_rates', 'fraud_alerts_enriched', 'fraud_alerts_raw', 'fraud_scenarios_dim', 'fraud_score_history', 'kpi_daily_fact', 'loan_contracts', 'login_events_raw', 'merchants_dim', 'payments', 'payments_raw', 'products_dim', 'sanctions_watchlist', 'sar_reports', 'source_systems_dim', 'transaction_limits', 'transfers_raw']
+
+[2] Identificando tablas de clientes y transacciones...
+    Tabla clientes      : customer_behavior_profile
+    Tabla transacciones : card_transactions_raw
+
+[3] Cargando datos locales (INPUTS/)...
+    clientes.txt      : 30 registros
+    transacciones.txt : 40 registros
+    Columnas clientes      : ['id_cliente', 'nombre', 'apellido', 'direccion', 'comuna', 'ciudad']
+    Columnas transacciones : ['id_transaccion', 'id_cliente', 'monto', 'geolocation', 'dispositivo', 'fecha']
+
+[4] Analizando tabla de CLIENTES en SQL Server...
+    Columnas en BD (12):
+      - behavior_profile_id (int)
+      - customer_id (int)
+      - usual_country_code (varchar)
+      - usual_channel (varchar)
+      - avg_transfer_amount (decimal)
+      - max_transfer_amount_90d (decimal)
+      - avg_login_hour (decimal)
+      - weekend_activity_flag (bit)
+      - night_activity_flag (bit)
+      - trusted_device_ratio (decimal)
+      - high_risk_country_ratio (decimal)
+      - profile_last_updated (datetime2)
+
+    Muestra (5 filas):
+
+    Total registros en BD: 0
+
+    Cobertura para fraude: 0.0%
+    Campos presentes : []
+    Campos FALTANTES :
+      - id_cliente: Identificador unico del cliente
+      - nombre: Nombre del cliente
+      - apellido: Apellido del cliente
+      - direccion: Direccion fisica
+      - comuna: Comuna (para analisis geografico)
+      - ciudad: Ciudad
+
+[5] Analizando tabla de TRANSACCIONES en SQL Server...
+    Columnas en BD (20):
+      - card_txn_id (varchar)
+      - card_id (int)
+      - merchant_id (int)
+      - account_id (int)
+      - customer_id (int)
+      - auth_code (varchar)
+      - amount (decimal)
+      - currency_code (varchar)
+      - txn_type (varchar)
+      - entry_mode (varchar)
+      - card_present_flag (bit)
+      - ecommerce_flag (bit)
+      - international_flag (bit)
+      - country_code (varchar)
+      - city_name (varchar)
+      - merchant_name (varchar)
+      - status (varchar)
+      - decline_reason (varchar)
+      - created_at (datetime2)
+      - source_system (varchar)
+
+    Muestra (5 filas):
+      {'card_txn_id': 'CTX0000001', 'card_id': 6, 'merchant_id': 2, 'account_id': 6, 'customer_id': 6, 'auth_code': 'AUTH000001', 'amount': Decimal('2527.00'), 'currency_code': 'EUR', 'txn_type': 'PURCHASE', 'entry_mode': 'CHIP', 'card_present_flag': True, 'ecommerce_flag': False, 'international_flag': False, 'country_code': 'MX', 'city_name': 'Mexico City', 'merchant_name': 'FastCash ATM', 'status': 'APPROVED', 'decline_reason': None, 'created_at': datetime.datetime(2026, 4, 5, 8, 14, 35, 906673), 'source_system': 'CARD_SWITCH'}
+      {'card_txn_id': 'CTX0000002', 'card_id': 28, 'merchant_id': 3, 'account_id': 28, 'customer_id': 28, 'auth_code': 'AUTH000002', 'amount': Decimal('1526.00'), 'currency_code': 'EUR', 'txn_type': 'PURCHASE', 'entry_mode': 'CHIP', 'card_present_flag': True, 'ecommerce_flag': False, 'international_flag': False, 'country_code': 'GB', 'city_name': 'Madrid', 'merchant_name': 'BetPlay Online', 'status': 'APPROVED', 'decline_reason': None, 'created_at': datetime.datetime(2026, 4, 6, 2, 18, 35, 906673), 'source_system': 'CARD_SWITCH'}
+      {'card_txn_id': 'CTX0000003', 'card_id': 8, 'merchant_id': 4, 'account_id': 8, 'customer_id': 8, 'auth_code': 'AUTH000003', 'amount': Decimal('1437.00'), 'currency_code': 'CLP', 'txn_type': 'PURCHASE', 'entry_mode': 'CONTACTLESS', 'card_present_flag': True, 'ecommerce_flag': False, 'international_flag': False, 'country_code': 'US', 'city_name': 'Mexico City', 'merchant_name': 'Luxury Travel Intl', 'status': 'APPROVED', 'decline_reason': None, 'created_at': datetime.datetime(2026, 4, 3, 14, 4, 35, 906673), 'source_system': 'CARD_SWITCH'}
+      {'card_txn_id': 'CTX0000004', 'card_id': 7, 'merchant_id': 2, 'account_id': 7, 'customer_id': 7, 'auth_code': 'AUTH000004', 'amount': Decimal('1794.00'), 'currency_code': 'EUR', 'txn_type': 'PURCHASE', 'entry_mode': 'CHIP', 'card_present_flag': True, 'ecommerce_flag': False, 'international_flag': False, 'country_code': 'MX', 'city_name': 'Madrid', 'merchant_name': 'FastCash ATM', 'status': 'APPROVED', 'decline_reason': None, 'created_at': datetime.datetime(2026, 4, 5, 22, 58, 35, 906673), 'source_system': 'CARD_SWITCH'}
+      {'card_txn_id': 'CTX0000005', 'card_id': 142, 'merchant_id': 5, 'account_id': 142, 'customer_id': 142, 'auth_code': 'AUTH000005', 'amount': Decimal('3285.00'), 'currency_code': 'EUR', 'txn_type': 'PURCHASE', 'entry_mode': 'ECOM', 'card_present_flag': False, 'ecommerce_flag': True, 'international_flag': False, 'country_code': 'CL', 'city_name': 'Mexico City', 'merchant_name': 'Marketplace X', 'status': 'APPROVED', 'decline_reason': None, 'created_at': datetime.datetime(2026, 4, 5, 2, 22, 35, 906673), 'source_system': 'CARD_SWITCH'}
+
+    Total registros en BD: 800
+
+    Estadisticas MONTO:
+                                        BD       TXT local
+      --------------------------------------------------
+      count                            800              40
+      min                            -20.0          9990.0
+      max                          9999.99        259990.0
+      avg                          2084.21         67590.0
+      p50                           1916.0         55990.0
+      p95                           3863.0        159990.0
+
+    Cobertura para fraude: 0.0%
+    Campos presentes : []
+    Campos FALTANTES :
+      - id_transaccion: Identificador unico de la transaccion
+      - id_cliente: FK al cliente
+      - monto: Monto de la transaccion (positivo/negativo)
+      - saldo_posterior: Saldo tras la transaccion (para F02-vaciado)
+      - tipo_transaccion: Tipo: TRANSFERENCIA_ENVIADA, DEPOSITO, etc.
+      - canal: Canal: APP_MOVIL, WEB, SUCURSAL, ATM (para F06)
+      - geolocation: Coordenadas lat/lon (para analisis geografico)
+      - comercio_contraparte: Destino/comercio (para F04-cuenta mula, F08)
+      - fecha_hora: Fecha y hora exacta (para F01, F05, F07, F10)
+
+[6] EVALUACION PARA DETECCION DE FRAUDE
+======================================================================
+    F01 Rafaga transferencias           FALTA: ['fecha_hora', 'tipo_transaccion', 'id_cliente']
+    F02 Vaciado de cuenta               FALTA: ['saldo_posterior']
+    F03 Monto atipico                   FALTA: ['monto', 'id_cliente']
+    F04 Cuenta mula                     FALTA: ['comercio_contraparte']
+    F05 Horario nocturno                FALTA: ['fecha_hora']
+    F06 Canal inusual                   FALTA: ['canal', 'id_cliente']
+    F07 Transferencia nocturna          FALTA: ['monto', 'fecha_hora', 'tipo_transaccion']
+    F08 Multiples contrapartes          FALTA: ['comercio_contraparte', 'fecha_hora']
+    F09 Anomalia ML                     FALTA: ['monto', 'geolocation', 'canal']
+    F10 Ingreso-egreso rapido           FALTA: ['fecha_hora', 'tipo_transaccion']
+
+[7] Aplicando cambios de esquema en SQL Server...
+  OK : -- CLIENTES: agregar columnas faltantes...
+  OK : ALTER TABLE customer_behavior_profile ADD id_cliente NVARCHAR(100) NULL; -- Iden...
+  OK : ALTER TABLE customer_behavior_profile ADD nombre NVARCHAR(100) NULL; -- Nombre d...
+  OK : ALTER TABLE customer_behavior_profile ADD apellido NVARCHAR(100) NULL; -- Apelli...
+  OK : ALTER TABLE customer_behavior_profile ADD direccion NVARCHAR(255) NULL; -- Direc...
+  OK : ALTER TABLE customer_behavior_profile ADD comuna NVARCHAR(100) NULL; -- Comuna (...
+  OK : ALTER TABLE customer_behavior_profile ADD ciudad NVARCHAR(100) NULL; -- Ciudad...
+  OK : -- TRANSACCIONES: agregar columnas faltantes...
+  OK : ALTER TABLE card_transactions_raw ADD id_transaccion NVARCHAR(100) NULL; -- Iden...
+  OK : ALTER TABLE card_transactions_raw ADD id_cliente NVARCHAR(100) NULL; -- FK al cl...
+  OK : ALTER TABLE card_transactions_raw ADD monto NVARCHAR(100) NULL; -- Monto de la t...
+  OK : ALTER TABLE card_transactions_raw ADD saldo_posterior DECIMAL(18,2) NULL; -- Sal...
+  OK : ALTER TABLE card_transactions_raw ADD tipo_transaccion NVARCHAR(50)  NULL; -- Ti...
+  OK : ALTER TABLE card_transactions_raw ADD canal NVARCHAR(20)  NULL; -- Canal: APP_MO...
+  OK : ALTER TABLE card_transactions_raw ADD geolocation NVARCHAR(50)  NULL; -- Coorden...
+  OK : ALTER TABLE card_transactions_raw ADD comercio_contraparte NVARCHAR(100) NULL; -...
+  OK : ALTER TABLE card_transactions_raw ADD fecha_hora DATETIME      NULL; -- Fecha y ...
+
+    Scripts SQL guardados en: C:\Users\amarambi\OneDrive - NTT DATA EMEAL\Desktop\prueba kiro\OUTPUTS\fix_schema.sql
+
+======================================================================
+RESUMEN
+======================================================================
+  Tabla clientes      : customer_behavior_profile | Cobertura fraude: 0.0%
+  Tabla transacciones : card_transactions_raw | Cobertura fraude: 0.0%
+  TXT clientes        : 30 registros
+  TXT transacciones   : 40 registros

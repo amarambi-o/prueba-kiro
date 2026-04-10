@@ -1,0 +1,9 @@
+TOP 3 COMUNAS CON MÁS TRANSACCIONES
+(cruce por coordenadas GEOLOCATION)
+========================================
+
+#    COMUNA               TRANSACCIONES
+----------------------------------------
+1    Providencia                      5
+2    Las Condes                       5
+3    Maipú                            5

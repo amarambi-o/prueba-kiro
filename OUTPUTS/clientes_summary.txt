@@ -1,0 +1,36 @@
+RESUMEN DE CLIENTES POR TOTAL DE TRANSACCIONES
+(ordenado de mayor a menor)
+=======================================================
+
+NOMBRE                         COMUNA               TRANSACCIONES
+-------------------------------------------------------
+Juan Pérez                     Providencia                      2
+María González                 Las Condes                       2
+Carlos Rojas                   Maipú                            2
+Daniela Muñoz                  Temuco                           2
+Pedro Contreras                Valparaíso                       2
+Francisca Torres               Viña del Mar                     2
+Luis Herrera                   Rancagua                         2
+Carolina Fernández             Antofagasta                      2
+Andrés Silva                   La Serena                        2
+Sofía Martínez                 Concepción                       2
+Camila Sepúlveda               Providencia                      1
+Diego Morales                  Las Condes                       1
+Valentina Castillo             Maipú                            1
+Jorge Vargas                   Providencia                      1
+Paula Araya                    Las Condes                       1
+Felipe Navarro                 Maipú                            1
+Constanza Reyes                Temuco                           1
+Matías Fuentes                 Valparaíso                       1
+Antonia Cortés                 Viña del Mar                     1
+Sebastián Ortega               Rancagua                         1
+Ignacia López                  Antofagasta                      1
+Tomás Ramírez                  La Serena                        1
+Florencia Mendoza              Concepción                       1
+Benjamín Pizarro               Providencia                      1
+Trinidad Salazar               Las Condes                       1
+Gabriel Alarcón                Maipú                            1
+Josefa Campos                  Temuco                           1
+Vicente Carrasco               Valparaíso                       1
+Amanda Riquelme                Viña del Mar                     1
+Cristóbal Peña                 Rancagua                         1

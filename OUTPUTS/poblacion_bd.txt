@@ -1,0 +1,53 @@
+======================================================================
+POBLACION DE DATOS REALISTAS PARA DETECCION DE FRAUDE
+======================================================================
+
+[1] Explorando tablas clave de la BD...
+    customers_dim (10 muestra):
+    Columnas: ['customer_id', 'customer_code', 'first_name', 'last_name', 'full_name', 'email', 'phone', 'birth_date', 'customer_type', 'segment', 'tax_id', 'country_code', 'city_name', 'address_line', 'pep_flag', 'vip_flag', 'deceased_flag', 'created_at', 'updated_at', 'source_system']
+      {'customer_id': 1, 'customer_code': 'CUST00001', 'first_name': 'Name1', 'last_name': 'Surname1', 'full_name': 'Name1 Surname1', 'email': 'customer1@mail.com', 'phone': '+34405173364', 'birth_date': datetime.date(2006, 3, 2), 'customer_type': 'PERSON', 'segment': 'RETAIL', 'tax_id': 'TAX000001', 'country_code': 'ES', 'city_name': 'Madrid', 'address_line': 'Street 1 #343', 'pep_flag': False, 'vip_flag': False, 'deceased_flag': False, 'created_at': datetime.datetime(2024, 12, 22, 16, 30, 22, 104188), 'updated_at': datetime.datetime(2026, 3, 26, 16, 30, 22, 104188), 'source_system': 'CORE_BANKING'}
+      {'customer_id': 2, 'customer_code': 'CUST00002', 'first_name': 'Name2', 'last_name': 'Surname2', 'full_name': 'Name2 Surname2', 'email': 'customer2@mail.com', 'phone': '+34080740985', 'birth_date': datetime.date(2002, 10, 31), 'customer_type': 'PERSON', 'segment': 'RETAIL', 'tax_id': 'TAX000002', 'country_code': 'ES', 'city_name': 'Madrid', 'address_line': 'Street 2 #424', 'pep_flag': False, 'vip_flag': False, 'deceased_flag': False, 'created_at': datetime.datetime(2025, 8, 21, 16, 30, 22, 104188), 'updated_at': datetime.datetime(2026, 3, 26, 16, 30, 22, 104188), 'source_system': 'CRM'}
+      {'customer_id': 3, 'customer_code': 'CUST00003', 'first_name': 'Name3', 'last_name': 'Surname3', 'full_name': 'Name3 Surname3', 'email': 'customer3@mail.com', 'phone': '+34947981899', 'birth_date': datetime.date(1990, 3, 25), 'customer_type': 'PERSON', 'segment': 'RETAIL', 'tax_id': 'TAX000003', 'country_code': 'ES', 'city_name': 'Madrid', 'address_line': 'Street 3 #438', 'pep_flag': False, 'vip_flag': False, 'deceased_flag': False, 'created_at': datetime.datetime(2023, 10, 15, 16, 30, 22, 104188), 'updated_at': datetime.datetime(2026, 3, 26, 16, 30, 22, 104188), 'source_system': 'CORE_BANKING'}
+
+    accounts_dim columnas: ['account_id', 'account_number', 'customer_id', 'product_id', 'branch_id', 'bank_id', 'currency_code', 'account_type', 'status', 'opened_at', 'closed_at', 'available_balance', 'ledger_balance', 'overdraft_limit', 'iban', 'swift_code', 'source_system']
+
+[2] Cargando datos TXT locales...
+    clientes.txt      : 30 registros
+    transacciones.txt : 40 registros
+
+[3] Poblando customer_behavior_profile con clientes TXT...
+    Operaciones OK: 30/60
+
+[4] Enriqueciendo card_transactions_raw con columnas para fraude...
+    Transacciones a enriquecer: 800
+    Transacciones actualizadas: 800/800
+
+[5] Creando vista fraude_transacciones_v...
+  OK : CREATE VIEW fraude_transacciones_v AS
+SELECT
+    t.card_txn_id                           A
+
+[6] Verificando vista fraude_transacciones_v...
+    Registros en vista: OK
+      {'id_transaccion': 'CTX0000001', 'id_cliente': '6', 'nombre': 'N/A', 'apellido': 'N/A', 'comuna': 'Desconocida', 'monto': '-2527.0', 'saldo_posterior': Decimal('3682210.00'), 'tipo_transaccion': 'COMPRA_COMERCIO', 'canal': 'ATM', 'geolocation': '-33.4372 -70.6506', 'comercio_contraparte': 'FastCash ATM', 'fecha_hora': datetime.datetime(2026, 4, 5, 8, 14), 'monto_original': Decimal('2527.00'), 'moneda': 'EUR', 'pais': 'MX', 'estado': 'APPROVED', 'es_internacional': False, 'es_ecommerce': False}
+      {'id_transaccion': 'CTX0000002', 'id_cliente': '28', 'nombre': 'N/A', 'apellido': 'N/A', 'comuna': 'Desconocida', 'monto': '-1526.0', 'saldo_posterior': Decimal('1731477.00'), 'tipo_transaccion': 'COMPRA_COMERCIO', 'canal': 'ATM', 'geolocation': '-36.8201 -73.0444', 'comercio_contraparte': 'BetPlay Online', 'fecha_hora': datetime.datetime(2026, 4, 6, 2, 18), 'monto_original': Decimal('1526.00'), 'moneda': 'EUR', 'pais': 'GB', 'estado': 'APPROVED', 'es_internacional': False, 'es_ecommerce': False}
+      {'id_transaccion': 'CTX0000003', 'id_cliente': '8', 'nombre': 'N/A', 'apellido': 'N/A', 'comuna': 'Desconocida', 'monto': '-1437.0', 'saldo_posterior': Decimal('1514869.00'), 'tipo_transaccion': 'COMPRA_COMERCIO', 'canal': 'APP_MOVIL', 'geolocation': '-33.5100 -70.7600', 'comercio_contraparte': 'Luxury Travel Intl', 'fecha_hora': datetime.datetime(2026, 4, 3, 14, 4), 'monto_original': Decimal('1437.00'), 'moneda': 'CLP', 'pais': 'US', 'estado': 'APPROVED', 'es_internacional': False, 'es_ecommerce': False}
+
+[7] COMPARACION FINAL: TXT local vs BD enriquecida
+======================================================================
+
+  Metrica            TXT local  BD enriquecida  Evaluacion
+  ------------------------------------------------------------
+  count                     40             800  ⚠ TXT muy pequeño
+  min                   9990.0            11.0  
+  max                 259990.0         10000.0  
+  avg                  67590.0          2085.0  
+  p50                  55990.0          1916.0  
+  p95                 159990.0          3863.0  
+
+  CONCLUSION:
+  - BD usa moneda EUR/USD (montos 20-9999), TXT usa CLP (9990-259990)
+  - BD tiene 800 transacciones reales con merchant, pais, canal
+  - TXT tiene 40 registros sinteticos, suficientes para prototipo
+  - Vista fraude_transacciones_v unifica ambas fuentes para el pipeline
+  - Recomendacion: usar BD para produccion, TXT para pruebas unitarias

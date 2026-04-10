@@ -1,0 +1,31 @@
+ID_CLIENTE;NOMBRE;APELLIDO;DIRECCION;COMUNA;CIUDAD
+1;Juan;Pérez;Av. Providencia 1234;Providencia;Santiago
+2;María;González;Calle Los Olivos 456;Las Condes;Santiago
+3;Carlos;Rojas;Pasaje El Molino 789;Maipú;Santiago
+4;Daniela;Muñoz;Av. Alemania 345;Temuco;Temuco
+5;Pedro;Contreras;Calle Prat 678;Valparaíso;Valparaíso
+6;Francisca;Torres;Av. San Martín 234;Viña del Mar;Viña del Mar
+7;Luis;Herrera;Calle O'Higgins 890;Rancagua;Rancagua
+8;Carolina;Fernández;Av. Colón 1567;Antofagasta;Antofagasta
+9;Andrés;Silva;Calle Baquedano 432;La Serena;La Serena
+10;Sofía;Martínez;Av. Arturo Prat 765;Concepción;Concepción
+11;Camila;Sepúlveda;Av. Providencia 987;Providencia;Santiago
+12;Diego;Morales;Calle Apoquindo 2234;Las Condes;Santiago
+13;Valentina;Castillo;Pasaje Las Torres 654;Maipú;Santiago
+14;Jorge;Vargas;Calle Bello 321;Providencia;Santiago
+15;Paula;Araya;Av. Kennedy 1450;Las Condes;Santiago
+16;Felipe;Navarro;Calle Pajaritos 876;Maipú;Santiago
+17;Constanza;Reyes;Av. Alemania 1120;Temuco;Temuco
+18;Matías;Fuentes;Cerro Alegre 455;Valparaíso;Valparaíso
+19;Antonia;Cortés;Av. Perú 980;Viña del Mar;Viña del Mar
+20;Sebastián;Ortega;Calle Estado 654;Rancagua;Rancagua
+21;Ignacia;López;Av. Brasil 345;Antofagasta;Antofagasta
+22;Tomás;Ramírez;Calle Balmaceda 222;La Serena;La Serena
+23;Florencia;Mendoza;Av. Los Carrera 567;Concepción;Concepción
+24;Benjamín;Pizarro;Av. Providencia 2222;Providencia;Santiago
+25;Trinidad;Salazar;Calle Manquehue 3344;Las Condes;Santiago
+26;Gabriel;Alarcón;Pasaje Central 456;Maipú;Santiago
+27;Josefa;Campos;Calle Prieto Norte 890;Temuco;Temuco
+28;Vicente;Carrasco;Av. Argentina 765;Valparaíso;Valparaíso
+29;Amanda;Riquelme;Calle Valparaíso 333;Viña del Mar;Viña del Mar
+30;Cristóbal;Peña;Av. Millán 456;Rancagua;Rancagua
